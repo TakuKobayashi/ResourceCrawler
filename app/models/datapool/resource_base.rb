@@ -40,6 +40,6 @@ class Datapool::ResourceBase < ApplicationRecord
     if aurl.query.present?
       remain_src += "?" + aurl.query
     end
-    return basic_src, other_src
+    return basic_src, remain_src
   end
 end
