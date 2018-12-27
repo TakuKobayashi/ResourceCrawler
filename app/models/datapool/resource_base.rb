@@ -2,7 +2,7 @@ class Datapool::ResourceBase < ApplicationRecord
   self.abstract_class = true
 
   def src
-    return self.basic_src + self.remain_src.to_s
+    return URI.escape(self.basic_src.to_s + self.remain_src.to_s)
   end
 
   def src=(url)
@@ -24,7 +24,7 @@ class Datapool::ResourceBase < ApplicationRecord
   private
   def self.url_partition(url:)
     aurl = Addressable::URI.parse(url)
-    pure_url = aurl.origin.to_s + aurl.path.to_s
+    pure_url = URI.unescape(aurl.origin.to_s + aurl.path.to_s)
     if pure_url.size > 255
       word_counter = 0
       srces, other_pathes = pure_url.split("/").partition do |word|
@@ -40,6 +40,6 @@ class Datapool::ResourceBase < ApplicationRecord
     if aurl.query.present?
       remain_src += "?" + aurl.query
     end
-    return basic_src, remain_src
+    return basic_src, URI.unescape(remain_src)
   end
 end
