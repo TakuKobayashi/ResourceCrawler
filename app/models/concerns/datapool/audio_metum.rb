@@ -26,34 +26,6 @@ module Datapool::AudioMetum
     ".alac"
   ]
 
-  def save_filename
-    if self.original_filename.present?
-      return self.original_filename
-    end
-    return super.save_filename
-  end
-
-  def self.new_audio(audio_url:, title:, file_genre: , options: {})
-    audio_metum = self.new(
-      title: title,
-      file_genre: file_genre,
-      options: {}.merge(options)
-    )
-    audio_metum.src = audio_url
-    if file_genre.blank?
-      if audio_metum.type == "Datapool::YoutubeAudioMetum" || audio_metum.type == "Datapool::NiconicoAudioMetum"
-        audio_metum.data_category = "video_streaming"
-      elsif Datapool::VideoMetum.videofile?(audio_metum.src)
-        audio_metum.data_category = "video_file"
-      else
-        audio_metum.data_category = "audio_file"
-      end
-    end
-    filename = self.match_filename(audio_metum.src.to_s)
-    audio_metum.set_original_filename(filename)
-    return audio_metum
-  end
-
   def self.audiofile?(url)
     return AUDIO_FILE_EXTENSIONS.any?{|ext| File.extname(url).downcase.start_with?(ext) }
   end

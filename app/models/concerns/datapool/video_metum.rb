@@ -27,26 +27,6 @@ module Datapool::VideoMetum
     ".swf"
   ]
 
-  def self.new_video(video_url:, title:, file_genre: , options: {})
-    video_metum = self.new(
-      title: title,
-      data_category: file_genre,
-      options: {
-      }.merge(options)
-    )
-    video_metum.src = video_url
-    if file_genre.blank?
-      if video_metum.type == "Datapool::YoutubeVideoMetum" || video_metum.type == "Datapool::NiconicoVideoMetum"
-        video_metum.data_category = "streaming"
-      else
-        video_metum.data_category = "file"
-      end
-    end
-    filename = self.match_filename(video_metum.src.to_s)
-    video_metum.set_original_filename(filename)
-    return video_metum
-  end
-
   def self.videofile?(url)
     return VIDEO_FILE_EXTENSIONS.any?{|ext| File.extname(url).downcase.start_with?(ext) }
   end
