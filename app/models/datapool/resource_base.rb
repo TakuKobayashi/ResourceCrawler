@@ -21,6 +21,14 @@ class Datapool::ResourceBase < ApplicationRecord
     return self.where(basic_src: basic_srces)
   end
 
+  def self.import_resources!(resources:)
+    src_resources = self.find_origin_src_by_url(url: resources.map(&:src).uniq).index_by(&:src)
+    import_resources = resources.select{|imp| src_resources[imp.src].blank? }.uniq(&:src)
+    if import_resources.present?
+      self.import!(import_resources)
+    end
+  end
+
   private
   def self.url_partition(url:)
     aurl = Addressable::URI.parse(url)

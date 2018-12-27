@@ -61,14 +61,16 @@ class Datapool::ResourceMetum < Datapool::ResourceBase
     end
   end
 
-  def self.constract(url:, title:, check_file: false, options: {})
+  def self.constract(url:, title:, website_id: nil, check_file: false, options: {})
     url.strip!
     sanitized_title = Sanitizer.basic_sanitize(title)
     new_resource_class = self.new
+    new_resource_class.datapool_website_id = website_id
     new_resource_class.title = sanitized_title
     new_resource_class.resource_genre = Datapool::ResourceMetum.suggest_genre(url)
     new_resource_class.filename = url
     new_resource_class.src = url
+    new_resource_class.options = options
     return new_resource_class
   end
 
@@ -136,14 +138,6 @@ class Datapool::ResourceMetum < Datapool::ResourceBase
     s3 = Aws::S3::Client.new
     result = s3.put_object(bucket: "taptappun", body: resource_binary, key: filepath)
     self.update!(backup_url: S3_ROOT_URL + filepath, md5sum: checksum)
-  end
-
-  def self.import_resources!(resources:)
-    src_resources = self.find_origin_src_by_url(url: imports.map(&:src).uniq).index_by(&:src)
-    import_resources = imports.select{|imp| src_resources[imp.src].blank? }.uniq(&:src)
-    if import_resources.present?
-      clazz.import!(import_resources)
-    end
   end
 
   def download_resource
