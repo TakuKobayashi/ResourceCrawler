@@ -1,12 +1,4 @@
 module Datapool::PdfMetum
-  def self.file_extensions
-    return [".pdf"]
-  end
-
-  def directory_name
-    return "pdfs"
-  end
-
   def self.pdffile?(filename)
     return File.extname(filename).downcase.start_with?(".pdf")
   end

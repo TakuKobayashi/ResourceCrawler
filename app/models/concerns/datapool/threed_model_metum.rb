@@ -29,6 +29,7 @@ module Datapool::ThreedModelMetum
     # Drawing Interchange Format
     ".dxf",
     # DXF Extensible 3D
+    # X3D Extensible 3D
     ".x3d",
     # Form-Z
     ".fmz",
@@ -43,13 +44,14 @@ module Datapool::ThreedModelMetum
     ".lwo",
     ".lws",
     # Lightwave Motion
-    ".mot"
+    ".mot",
     # MicroStation
     ".dgn",
     # Nendo
     ".ndo",
     # OBJ
-    #VideoScape
+    # VideoScape
+    # Wavefront
     ".obj",
     # Okino Transfer File Format
     ".bdf",
@@ -80,15 +82,19 @@ module Datapool::ThreedModelMetum
     # Strata StudioPro
     ".vis",
     # TrueSpace
-    ".cob",
-    # trueSpace
-    ".cob",
     ".scn",
     # Universal
     ".u3d",
     # VectorWorks
-    ".mcd"
-    #Viewpoint (.vet) VRML (.wrl) Wavefront (.obj) Wings 3D (.wings) X3D Extensible 3D (.x3d) Xfig Export (.fig)
+    ".mcd",
+    # Viewpoint
+    ".vet",
+    # VRML
+    ".wrl",
+    # Wings 3D
+    ".wings",
+    # Xfig Export
+    ".fig",
   ]
 
   def self.threed_model?(url)

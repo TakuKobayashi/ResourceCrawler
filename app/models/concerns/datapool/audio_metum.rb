@@ -26,22 +26,6 @@ module Datapool::AudioMetum
     ".alac"
   ]
 
-  def s3_path
-    return CRAWL_AUDIO_ROOT_PATH
-  end
-
-  def backup_s3_path
-    return CRAWL_AUDIO_BACKUP_PATH
-  end
-
-  def self.file_extensions
-    return AUDIO_FILE_EXTENSIONS
-  end
-
-  def directory_name
-    return "audios"
-  end
-
   def save_filename
     if self.original_filename.present?
       return self.original_filename

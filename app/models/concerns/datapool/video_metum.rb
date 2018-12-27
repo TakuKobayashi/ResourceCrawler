@@ -27,25 +27,6 @@ module Datapool::VideoMetum
     ".swf"
   ]
 
-  CRAWL_VIDEO_ROOT_PATH = "project/crawler/videos/"
-  CRAWL_VIDEO_BACKUP_PATH = "backup/crawler/videos/"
-
-  def s3_path
-    return CRAWL_VIDEO_ROOT_PATH
-  end
-
-  def backup_s3_path
-    return CRAWL_VIDEO_BACKUP_PATH
-  end
-
-  def directory_name
-    return "videos"
-  end
-
-  def self.file_extensions
-    return VIDEO_FILE_EXTENSIONS
-  end
-
   def self.new_video(video_url:, title:, file_genre: , options: {})
     video_metum = self.new(
       title: title,
