@@ -37,17 +37,43 @@ class Datapool::ResourceMetum < Datapool::ResourceBase
 
   S3_ROOT_URL = "https://taptappun.s3.amazonaws.com/"
 
-  def filename
-    return self.original_filename.to_s
-  end
-
-
   def self.resource_file_extensions
     return ([".pdf"] |
       Datapool::AudioMetum::AUDIO_FILE_EXTENSIONS |
       Datapool::ImageMetum::IMAGE_FILE_EXTENSIONS |
       Datapool::VideoMetum::VIDEO_FILE_EXTENSIONS |
       Datapool::ThreedModelMetum::THREED_MODEL_FILE_EXTENSIONS)
+  end
+
+  def self.suggest_genre(url)
+    if Datapool::ImageMetum.imagefile?(url)
+      return :image
+    elsif Datapool::VideoMetum.videofile?(url)
+      return :video
+    elsif Datapool::AudioMetum.audiofile?(url)
+      return :audio
+    elsif Datapool::PdfMetum.pdffile?(url)
+      return :pdf
+    elsif Datapool::ThreedModelMetum.threed_model?(url)
+      return :threed_model
+    else
+      return :unknown
+    end
+  end
+
+  def self.constract(url:, title:, check_file: false, options: {})
+    url.strip!
+    sanitized_title = Sanitizer.basic_sanitize(title)
+    new_resource_class = self.new
+    new_resource_class.title = sanitized_title
+    new_resource_class.resource_genre = Datapool::ResourceMetum.suggest_genre(url)
+    new_resource_class.filename = url
+    new_resource_class.src = url
+    return new_resource_class
+  end
+
+  def filename
+    return self.original_filename.to_s
   end
 
   def filename=(filepath)
@@ -94,32 +120,22 @@ class Datapool::ResourceMetum < Datapool::ResourceBase
     end
   end
 
-  def suggest_genre
-    url = self.src
-    if Datapool::ImageMetum.imagefile?(url)
-      return :image
-    elsif Datapool::VideoMetum.videofile?(url)
-      return :video
-    elsif Datapool::AudioMetum.audiofile?(url)
-      return :audio
-    elsif Datapool::PdfMetum.pdffile?(url)
-      return :pdf
-    elsif Datapool::ThreedModelMetum.threed_model?(url)
-      return :threed_model
-    else
-      return :unknown
-    end
+  def exist_backup?
+    return backup_url.present?
   end
 
-  def self.constract(url:, title:, check_file: false, options: {})
-    url.strip!
-    sanitized_title = Sanitizer.basic_sanitize(title)
-    new_resource_class = self.new
-    new_resource_class.src = url
-    new_resource_class.title = sanitized_title
-    new_resource_class.resource_genre = new_resource_class.suggest_genre
-    new_resource_class.filename = url
-    return new_resource_class
+  def backup!
+    if self.exist_backup?
+      return false
+    end
+    ext = File.extname(self.filename)
+    plane_filename = self.filename.gsub(ext, "")
+    filepath = self.s3_backup_path + [plane_filename, SecureRandom.hex].join("_") + ext
+    resource_binary = self.download_resource
+    checksum = Digest::MD5.hexdigest(resource_binary)
+    s3 = Aws::S3::Client.new
+    result = s3.put_object(bucket: "taptappun", body: resource_binary, key: filepath)
+    self.update!(backup_url: S3_ROOT_URL + filepath, md5sum: checksum)
   end
 
   def self.import_resources!(resources:)
