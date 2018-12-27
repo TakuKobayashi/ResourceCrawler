@@ -26,27 +26,16 @@ class Datapool::ResourceMetum < Datapool::ResourceBase
   serialize :options, JSON
 
   enum resource_genre: {
-    image: 0,
-    video: 1,
-    audio: 2,
-    pdf: 3,
-    threed_model: 4,
-    text: 5,
-    others: 6,
+    unknown: 0,
+    image: 1,
+    video: 2,
+    audio: 3,
+    pdf: 4,
+    threed_model: 5,
+    text: 6
   }
 
   S3_ROOT_URL = "https://taptappun.s3.amazonaws.com/"
-
-  CRAWL_RESOURCE_ROOT_PATH = "project/crawler/resources/"
-  CRAWL_RESOURCE_BACKUP_PATH = "backup/crawler/resources/"
-
-  def directory_name
-    return "resources"
-  end
-
-  def self.file_extensions
-    return []
-  end
 
   def self.match_filename(filepath)
     paths = filepath.split("/")
@@ -56,119 +45,74 @@ class Datapool::ResourceMetum < Datapool::ResourceBase
     return resourcefile_name.match(/(.+?#{ext})/).to_s
   end
 
-  def self.constract(url:, title:, check_file: false, file_genre: nil, priority_check_class: nil, options: {})
+  def filename=(filepath)
+    self.original_filename = Datapool::ResourceMetum.match_filename(filepath)
+  end
+
+  def s3_root_path
+    if self.image?
+      return "project/crawler/images/"
+    elsif self.video?
+      return "project/crawler/videos/"
+    elsif self.audio?
+      return "project/crawler/audios/"
+    elsif self.pdf?
+      return "project/crawler/pdfs/"
+    elsif self.threed_model?
+      return "project/crawler/threed_models/"
+    else
+      return "project/crawler/resources/"
+    end
+  end
+
+  def s3_backup_path
+    if self.image?
+      return "backup/crawler/images/"
+    elsif self.video?
+      return "backup/crawler/videos/"
+    elsif self.audio?
+      return "backup/crawler/audios/"
+    elsif self.pdf?
+      return "backup/crawler/pdfs/"
+    elsif self.threed_model?
+      return "backup/crawler/threed_models/"
+    else
+      return "backup/crawler/resources/"
+    end
+  end
+
+  def suggest_genre
+    url = self.src
+    if Datapool::ImageMetum.imagefile?(url)
+      return :image
+    elsif Datapool::VideoMetum.videofile?(url)
+      return :video
+    elsif Datapool::AudioMetum.audiofile?(url)
+      return :audio
+    elsif Datapool::PdfMetum.pdffile?(url)
+      return "backup/crawler/pdfs/"
+    elsif self.threed_model?
+      return "backup/crawler/threed_models/"
+    else
+      return "backup/crawler/resources/"
+    end
+  end
+
+  def self.constract(url:, title:, check_file: false, options: {})
     url.strip!
     sanitized_title = Sanitizer.basic_sanitize(title)
-    new_resource_class = nil
-    if priority_check_class.present?
-      new_resource_class = priority_check_class.to_s.constantize.constract(
-        url: url,
-        title: sanitized_title,
-        priority_check_class: nil,
-        check_file: check_file,
-        file_genre: file_genre,
-        options: options
-      )
-      return new_resource_class
-    end
-    if Datapool::ImageMetum.imagefile?(url)
-      if self.base_class.to_s == "Datapool::ImageMetum"
-        new_resource_class = self.new_image(image_url: url, title: sanitized_title, check_image_file: check_file, options: options)
-      else
-        new_resource_class = Datapool::WebSiteImageMetum.new_image(image_url: url, title: sanitized_title, check_image_file: check_file, options: options)
-      end
-      if new_resource_class.present?
-        return new_resource_class
-      end
-    end
-    if Datapool::PdfMetum.pdffile?(url)
-      if self.base_class.to_s == "Datapool::PdfMetum"
-        new_resource_class = self.new_pdf(pdf_url: url, title: sanitized_title, check_pdf_file: check_file, options: options)
-      else
-        new_resource_class = Datapool::PdfMetum.new_pdf(pdf_url: url, title: sanitized_title, check_pdf_file: check_file, options: options)
-      end
-      if new_resource_class.present?
-        return new_resource_class
-      end
-    end
-    if Datapool::VideoMetum.videofile?(url)
-      if self.base_class.to_s == "Datapool::VideoMetum"
-        new_resource_class = self.new_video(video_url: url, title: sanitized_title, file_genre: file_genre, options: options)
-      else
-        video_clazz = Datapool::WebSiteVideoMetum
-        if Datapool::YoutubeVideoMetum.youtube?(url)
-          video_clazz = Datapool::YoutubeVideoMetum
-        elsif Datapool::NiconicoVideoMetum.niconico_video?(url)
-          video_clazz = Datapool::NiconicoVideoMetum
-        end
-        new_resource_class = video_clazz.new_video(video_url: url, title: sanitized_title, file_genre: file_genre, options: options)
-      end
-      if new_resource_class.present?
-        return new_resource_class
-      end
-    end
-    if Datapool::AudioMetum.audiofile?(url)
-      if self.base_class.to_s == "Datapool::AudioMetum"
-        new_resource_class = self.new_audio(audio_url: url, title: sanitized_title, file_genre: file_genre, options: options)
-      else
-        audio_clazz = Datapool::WebSiteAudioMetum
-        if Datapool::YoutubeVideoMetum.youtube?(url)
-          audio_clazz = Datapool::YoutubeAudioMetum
-        elsif Datapool::NiconicoVideoMetum.niconico_video?(url)
-          audio_clazz = Datapool::NiconicoAudioMetum
-        end
-        new_resource_class = audio_clazz.new_audio(audio_url: url, title: sanitized_title, file_genre: file_genre, options: options)
-      end
-      if new_resource_class.present?
-        return new_resource_class
-      end
-    end
-    if self.base_class.to_s == "Datapool::Website"
-      new_resource_class = self.new_website(url: url, title: sanitized_title, options: options)
-    else
-      new_resource_class = Datapool::Website.new_website(url: url, title: sanitized_title, options: options)
-    end
+    new_resource_class = self.new
+    new_resource_class.src = url
+    new_resource_class.title = sanitized_title
+    new_resource_class.set_correct_genre
     return new_resource_class
   end
 
   def self.import_resources!(resources:)
-    clazz_imports = {}
-    resources.each do |resource|
-      next unless resource.kind_of?(Datapool::ResourceMetum)
-      if resource.kind_of?(Datapool::ImageMetum)
-        if clazz_imports[Datapool::ImageMetum].blank?
-          clazz_imports[Datapool::ImageMetum] = []
-        end
-        clazz_imports[Datapool::ImageMetum] << resource
-      elsif resource.kind_of?(Datapool::PdfMetum)
-        if clazz_imports[Datapool::PdfMetum].blank?
-          clazz_imports[Datapool::PdfMetum] = []
-        end
-        clazz_imports[Datapool::PdfMetum] << resource
-      elsif resource.kind_of?(Datapool::AudioMetum)
-        if clazz_imports[Datapool::AudioMetum].blank?
-          clazz_imports[Datapool::AudioMetum] = []
-        end
-        clazz_imports[Datapool::AudioMetum] << resource
-      elsif resource.kind_of?(Datapool::VideoMetum)
-        if clazz_imports[Datapool::VideoMetum].blank?
-          clazz_imports[Datapool::VideoMetum] = []
-        end
-        clazz_imports[Datapool::VideoMetum] << resource
-      else
-        if clazz_imports[Datapool::Website].blank?
-          clazz_imports[Datapool::Website] = []
-        end
-        clazz_imports[Datapool::Website] << resource
-      end
-    end
-
-    clazz_imports.each do |clazz, imports|
-      src_resources = clazz.find_origin_src_by_url(url: imports.map(&:src).uniq).index_by(&:src)
-      import_resources = imports.select{|imp| src_resources[imp.src].blank? }.uniq(&:src)
-      if import_resources.present?
-        clazz.import!(import_resources)
-      end
+    src_resources = self.find_origin_src_by_url(url: imports.map(&:src).uniq).index_by(&:src)
+    import_resources = imports.select{|imp| src_resources[imp.src].blank? }.uniq(&:src)
+    if import_resources.present?
+      clazz.import!(import_resources)
     end
   end
 

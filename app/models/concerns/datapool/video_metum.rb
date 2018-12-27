@@ -67,6 +67,6 @@ module Datapool::VideoMetum
   end
 
   def self.videofile?(url)
-    return VIDEO_FILE_EXTENSIONS.any?{|ext| File.extname(url).downcase.start_with?(ext) } || Datapool::NiconicoVideoMetum.niconico_video?(url) || Datapool::YoutubeVideoMetum.youtube?(url)
+    return VIDEO_FILE_EXTENSIONS.any?{|ext| File.extname(url).downcase.start_with?(ext) }
   end
 end

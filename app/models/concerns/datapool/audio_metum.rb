@@ -1,7 +1,4 @@
 module Datapool::AudioMetum
-  CRAWL_AUDIO_ROOT_PATH = "project/crawler/audios/"
-  CRAWL_AUDIO_BACKUP_PATH = "backup/crawler/audios/"
-
   AUDIO_FILE_EXTENSIONS = [
     #https://ja.wikipedia.org/wiki/AIFF
     ".aiff",".aif", ".aifc", ".afc",
