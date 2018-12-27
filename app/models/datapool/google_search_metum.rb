@@ -32,10 +32,15 @@ class Datapool::GoogleSearchMetum < Datapool::ResourceMetum
       search_url = Addressable::URI.parse(GOOGLE_SEARCH_URL)
       #tbm=ischは画像検索の結果のタブ, ijnはどうやる100件ごとのページ番号のよう
       search_url.query_values = {q: keyword, tbm: "isch", start: counter, ijn: (counter / 100).to_i}
+      start_time = Time.current
       images = self.import_search_images!(search_url: search_url.to_s, number: counter, keyword: keyword)
       break if images.blank?
       all_images += images
       counter = counter + images.size
+      sleep_second = 1.second - (Time.current - start_time).second
+      if sleep_second > 0
+        sleep sleep_second
+      end
     end
     return all_images
   end
@@ -102,11 +107,17 @@ class Datapool::GoogleSearchMetum < Datapool::ResourceMetum
       if image.present?
         images << image
         web_attribute = web_attributes[index] || {}
-        websites << Datapool::GoogleSearchWebsite.constract(url: link_metum["imgrefurl"].to_s, title: web_attribute["pt"].to_s, options: {keyword: keyword.to_s, number: number + counter + 1})
+        website = Datapool::Website.new(
+          title: web_attribute["pt"].to_s,
+          options: {keyword: keyword.to_s, number: number + counter + 1}
+        )
+        website.src = link_metum["imgrefurl"].to_s
+        websites << website
         counter = counter + 1
       end
     end
-    self.import_resources!(resources: images + websites)
+    Datapool::Website.import_resources!(resources: websites)
+    self.import_resources!(resources: images)
     return images
   end
 end
