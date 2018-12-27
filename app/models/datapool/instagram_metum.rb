@@ -5,9 +5,9 @@
 #  id                  :bigint(8)        not null, primary key
 #  type                :string(255)
 #  datapool_website_id :integer
-#  resource_genre      :integer          default("image"), not null
+#  resource_genre      :integer          default("unknown"), not null
 #  title               :string(255)      not null
-#  original_filename   :string(255)
+#  original_filename   :text(65535)
 #  basic_src           :string(255)      not null
 #  remain_src          :text(65535)
 #  file_size           :integer          default(0), not null

@@ -5,9 +5,9 @@
 #  id                  :bigint(8)        not null, primary key
 #  type                :string(255)
 #  datapool_website_id :integer
-#  resource_genre      :integer          default("image"), not null
+#  resource_genre      :integer          default("unknown"), not null
 #  title               :string(255)      not null
-#  original_filename   :string(255)
+#  original_filename   :text(65535)
 #  basic_src           :string(255)      not null
 #  remain_src          :text(65535)
 #  file_size           :integer          default(0), not null
@@ -37,16 +37,29 @@ class Datapool::ResourceMetum < Datapool::ResourceBase
 
   S3_ROOT_URL = "https://taptappun.s3.amazonaws.com/"
 
-  def self.match_filename(filepath)
-    paths = filepath.split("/")
-    resourcefile_name = paths.detect{|p| self.file_extensions.any?{|ie| p.include?(ie)} }
-    return "" if resourcefile_name.blank?
-    ext = self.file_extensions.detect{|ie| resourcefile_name.include?(ie) }
-    return resourcefile_name.match(/(.+?#{ext})/).to_s
+  def filename
+    return self.original_filename.to_s
+  end
+
+
+  def self.resource_file_extensions
+    return ([".pdf"] |
+      Datapool::AudioMetum::AUDIO_FILE_EXTENSIONS |
+      Datapool::ImageMetum::IMAGE_FILE_EXTENSIONS |
+      Datapool::VideoMetum::VIDEO_FILE_EXTENSIONS |
+      Datapool::ThreedModelMetum::THREED_MODEL_FILE_EXTENSIONS)
   end
 
   def filename=(filepath)
-    self.original_filename = Datapool::ResourceMetum.match_filename(filepath)
+    paths = filepath.split("/")
+    file_extensions = Datapool::ResourceMetum.resource_file_extensions
+    resourcefile_name = paths.detect{|p| file_extensions.any?{|ie| p.include?(ie)} }
+    if resourcefile_name.present?
+      ext = file_extensions.detect{|ie| resourcefile_name.include?(ie) }
+      self.original_filename = resourcefile_name.match(/(.+?#{ext})/).to_s
+    else
+      self.original_filename = SecureRandom.hex + File.extname(filename)
+    end
   end
 
   def s3_root_path
@@ -90,11 +103,11 @@ class Datapool::ResourceMetum < Datapool::ResourceBase
     elsif Datapool::AudioMetum.audiofile?(url)
       return :audio
     elsif Datapool::PdfMetum.pdffile?(url)
-      return "backup/crawler/pdfs/"
-    elsif self.threed_model?
-      return "backup/crawler/threed_models/"
+      return :pdf
+    elsif Datapool::ThreedModelMetum.threed_model?(url)
+      return :threed_model
     else
-      return "backup/crawler/resources/"
+      return :unknown
     end
   end
 
@@ -104,7 +117,8 @@ class Datapool::ResourceMetum < Datapool::ResourceBase
     new_resource_class = self.new
     new_resource_class.src = url
     new_resource_class.title = sanitized_title
-    new_resource_class.set_correct_genre
+    new_resource_class.resource_genre = new_resource_class.suggest_genre
+    new_resource_class.filename = url
     return new_resource_class
   end
 
@@ -116,21 +130,7 @@ class Datapool::ResourceMetum < Datapool::ResourceBase
     end
   end
 
-  def save_filename
-    return SecureRandom.hex + File.extname(self.try(:original_filename).to_s)
-  end
-
-  def set_original_filename(filename)
-    if filename.size > 255
-      self.original_filename = SecureRandom.hex + File.extname(filename)
-    else
-      self.original_filename = filename
-    end
-  end
-
   def download_resource
-    aurl = Addressable::URI.parse(self.src)
-    response_body = RequestParser.request_and_response_body(url: aurl.to_s, options: {:follow_redirect => true})
-    return response_body
+    return RequestParser.request_and_response_body(url: self.src.to_s, options: {:follow_redirect => true})
   end
 end
