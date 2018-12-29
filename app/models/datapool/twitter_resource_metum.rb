@@ -116,13 +116,13 @@ class Datapool::TwitterResourceMetum < Datapool::ResourceMetum
       case m
       when Twitter::Media::Photo
         image_resource = self.constract(
-          url:, m.media_url.to_s,
+          url: m.media_url.to_s,
           title: tweet_text,
           options: {
             tweet_id: tweet.id
           }.merge(options)
         )
-        image_resource.resource_genre = :image]
+        image_resource.resource_genre = :image
         [image_resource]
       when Twitter::Media::Video
         variantes = m.video_info.try(:variants) || []
