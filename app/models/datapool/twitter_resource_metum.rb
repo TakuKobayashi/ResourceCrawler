@@ -25,8 +25,18 @@
 class Datapool::TwitterResourceMetum < Datapool::ResourceMetum
   TIMELINE_CRAWL_COUNT = 200
 
-  def self.search_image_tweet!(keyword:)
-    twitter_client = TwitterRecord.get_twitter_rest_client("citore")
+  def self.get_rest_client
+    rest_client = Twitter::REST::Client.new do |config|
+      config.consumer_key        = ENV.fetch('TWITTER_CONSUMER_KEY', '')
+      config.consumer_secret     = ENV.fetch('TWITTER_CONSUMER_SECRET', '')
+      config.access_token        = ENV.fetch('TWITTER_ACCESS_TOKEN', '')
+      config.access_token_secret = ENV.fetch('TWITTER_ACCESS_TOKEN_SECRET', '')
+    end
+    return rest_client
+  end
+
+  def self.search_and_generate!(keyword:)
+    twitter_client = self.get_rest_client
     tweets = []
     retry_count = 0
     options = {count: 100}
@@ -42,13 +52,14 @@ class Datapool::TwitterResourceMetum < Datapool::ResourceMetum
         return []
       end
     end
-    return generate_images(tweets: tweets, options: {keyword: keyword})
+    resources = self.generate_resources(tweets: tweets, options: {keyword: keyword})
+    return resources
   end
 
-  def self.images_from_user_timeline!(username:)
+  def self.user_timeline_and_generate!(username:)
     tweet_options = {count: TIMELINE_CRAWL_COUNT}
-    twitter_client = TwitterRecord.get_twitter_rest_client("citore")
-    images = []
+    twitter_client = self.get_rest_client
+    resources = []
     last_tweet_id = nil
 
     loop do
@@ -69,76 +80,76 @@ class Datapool::TwitterResourceMetum < Datapool::ResourceMetum
           retry
         end
       end
-      images += generate_images(tweets: tweets, options: {username: username})
+      resources += self.generate_resources(tweets: tweets, options: {username: username})
       break if tweets.size < TIMELINE_CRAWL_COUNT
       last_tweet_id = tweets.select{|s| s.try(:id).present? }.min_by{|s| s.id.to_i }.try(:id).to_i
     end
-    return images
+    return resources
   end
 
   private
-  def self.generate_images(tweets:, options: {})
-    images = []
-    videos = []
+  def self.generate_resources(tweets:, options: {})
+    resources = []
     websites = []
-    quoteds_tweets = []
 
     tweets.each do |tweet|
-      image_urls = TwitterRecord.get_image_urls_from_tweet(tweet: tweet)
-      image_urls.each do |image_url|
-        images << self.constract_image_from_tweet(tweet: tweet, image_url: image_url, options: options)
-      end
+      resources += self.constract_from_tweet(tweet: tweet, options: options)
+      websites += Datapool::Website.constract_from_tweet(tweet: tweet, options: options)
 
-      videos += Datapool::TwitterVideoMetum.constract_from_tweet(tweet: tweet)
-      websites += Datapool::TwitterWebsite.constract_from_tweet(tweet: tweet)
       if tweet.quoted_tweet?
-        quoteds_tweets << tweet.quoted_tweet
+        resources += self.constract_from_tweet(tweet: tweet.quoted_tweet, options: options)
+        websites += Datapool::Website.constract_from_tweet(tweet: tweet.quoted_tweet, options: options)
       end
     end
-    images.uniq!(&:src)
-    self.import_resources!(resources: images + videos + websites)
-    if quoteds_tweets.present?
-      images += self.generate_images(tweets: quoteds_tweets, options: options)
-    end
-    return images
+    resources.uniq!(&:src)
+    websites.uniq!(&:src)
+    self.import_resources!(resources: resources)
+    Datapool::Website.import_resources!(resources: websites)
+    return resources
   end
 
-  def self.constract_image_from_tweet(tweet:, image_url:, options: {})
-    tweet_text = Sanitizer.basic_sanitize(tweet.text)
-    tweet_text = Sanitizer.delete_urls(tweet_text)
-    image = self.constract(
-      url: image_url.to_s,
-      title: tweet_text,
-      check_file: false,
-      options: {
-        tweet_id: tweet.id
-      }.merge(options)
-    )
-    return image
-  end
-
-  def self.constract_from_tweet(tweet:)
+  def self.constract_from_tweet(tweet:, options: {})
     return [] unless tweet.media?
     tweet_text = Sanitizer.basic_sanitize(tweet.text)
     tweet_text = Sanitizer.delete_urls(tweet_text)
 
-    videos = tweet.media.flat_map do |m|
+    resources = tweet.media.flat_map do |m|
       case m
-      when Twitter::Media::Video
-        max_bitrate_variant = m.video_info.variants.max_by{|variant| variant.bitrate.to_i }
-        video = Datapool::TwitterVideoMetum.new(
+      when Twitter::Media::Photo
+        image_resource = self.constract(
+          url:, m.media_url.to_s,
           title: tweet_text,
-          front_image_url: m.media_url.to_s,
-          data_category: :file,
-          bitrate: max_bitrate_variant.try(:bitrate),
-          options: {duration: m.video_info.duration_millis}
+          options: {
+            tweet_id: tweet.id
+          }.merge(options)
         )
-        video.src = max_bitrate_variant.try(:url).to_s
-        video
+        image_resource.resource_genre = :image]
+        [image_resource]
+      when Twitter::Media::Video
+        variantes = m.video_info.try(:variants) || []
+        max_bitrate_variant = variantes.max_by{|variant| variant.try(:bitrate).to_i }
+        image_resource = self.constract(
+          url: m.media_url.to_s,
+          title: tweet_text,
+          options: {
+            tweet_id: tweet.id
+          }.merge(options)
+        )
+        image_resource.resource_genre = :image
+        video_resource = self.constract(
+          url: max_bitrate_variant.try(:url).to_s,
+          title: tweet_text,
+          options: {
+            tweet_id: tweet.id,
+            duration: m.video_info.duration_millis
+          }.merge(options)
+        )
+        video_resource.resource_genre = :video
+        [image_resource, video_resource]
       else
         []
       end
     end
-    return videos
+    return resources.flatten
   end
 end

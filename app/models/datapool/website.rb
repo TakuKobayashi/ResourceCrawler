@@ -16,4 +16,21 @@
 
 class Datapool::Website < Datapool::ResourceBase
   serialize :options, JSON
+
+  def self.constract_from_tweet(tweet:, options: {})
+    return [] unless tweet.urls?
+    tweet_text = Sanitizer.basic_sanitize(tweet.text)
+    tweet_text = Sanitizer.delete_urls(tweet_text)
+
+    websites = tweet.urls.flat_map do |urle|
+      website = Datapool::Website.new
+      website.src = urle.expanded_url.to_s
+      website.title = tweet_text
+      website.options = {
+        tweet_id: tweet.id
+      }.merge(options)
+      website
+    end
+    return websites.flatten
+  end
 end
