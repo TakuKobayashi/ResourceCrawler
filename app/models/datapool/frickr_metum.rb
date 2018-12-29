@@ -31,42 +31,41 @@ class Datapool::FrickrMetum < Datapool::ResourceMetum
     return flickr
   end
 
-  def self.search_images!(search: {})
+  def self.search_resources!(search: {})
     flickr_client = self.get_flickr_client
     page_counter = 1
-    flickr_images = []
-    images = []
-    image_counter = 0
+    flickr_resources = []
+    resources = []
+    resource_counter = 0
     loop do
-      flickr_images = flickr_client.photos.search(search.merge({per_page: PER_PAGE, page: page_counter}))
-      images += self.generate_images!(flickr_images: flickr_images, options: search)
+      flickr_resources = flickr_client.photos.search(search.merge({per_page: PER_PAGE, page: page_counter}))
+      resources += self.generate_resources!(flickr_resources: flickr_resources, options: search)
       page_counter = page_counter + 1
-      image_counter += flickr_images.size
-      break if image_counter >= flickr_images.total.to_i
+      resource_counter += flickr_resources.size
+      break if resource_counter >= flickr_resources.total.to_i
     end
-    return images.uniq(&:src)
+    return resources.uniq(&:src)
   end
 
   private
-  def self.generate_images!(flickr_images:, options: {})
-    images = []
-    image_urls = []
-    flickr_images.each do |flickr_image|
-      image_url = FlickRaw.url(flickr_image)
-      next if image_urls.include?(image_url.to_s)
-      image_urls << image_url.to_s
-      image = self.constract(
-        url: image_url.to_s,
-        title: Sanitizer.basic_sanitize(flickr_image.title),
+  def self.generate_resources!(flickr_resources:, options: {})
+    url_resources = {}
+    flickr_resources.each do |flickr_resource|
+      resource_url = FlickRaw.url(flickr_resource)
+      next if url_resources[resource_url.to_s].blank?
+      resource = self.constract(
+        url: resource_url.to_s,
+        title: flickr_resource.title,
         options: {
-          image_id: flickr_image.id,
-          image_secret: flickr_image.secret,
-          post_user_id: flickr_image.owner
+          flicker_id: flickr_resources.id,
+          flicker_secret: flickr_resources.secret,
+          flicker_user_id: flickr_resources.owner
         }.merge(options)
       )
-      images << image
+      url_resources[resource_url.to_s] = resource
     end
-    self.import_resources!(resources: images)
-    return images
+    resources = url_resources.values
+    self.import_resources!(resources: resources)
+    return resources
   end
 end

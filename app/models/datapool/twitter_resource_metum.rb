@@ -110,8 +110,7 @@ class Datapool::TwitterResourceMetum < Datapool::ResourceMetum
 
   def self.constract_from_tweet(tweet:, options: {})
     return [] unless tweet.media?
-    tweet_text = Sanitizer.basic_sanitize(tweet.text)
-    tweet_text = Sanitizer.delete_urls(tweet_text)
+    tweet_text = Sanitizer.delete_urls(tweet.text)
 
     resources = tweet.media.flat_map do |m|
       case m
