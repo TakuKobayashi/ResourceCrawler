@@ -63,7 +63,7 @@ class Datapool::Website < Datapool::ResourceBase
       contents += Sanitizer.scan_url_path_resources(text.downcase, Datapool::ResourceMetum.resource_file_extensions)
     end
     resource_meta = contents.uniq.map do |url|
-      Datapool::ResourceMetum.constract(
+      Datapool::WebsiteResourceMetum.constract(
         url: url,
         title: self.title,
         website_id: self.id,
@@ -72,7 +72,7 @@ class Datapool::Website < Datapool::ResourceBase
       )
     end
     self.transaction do
-      Datapool::ResourceMetum.import_resources!(resources: resource_meta)
+      Datapool::WebsiteResourceMetum.import_resources!(resources: resource_meta)
       self.update!(last_crawl_time: Time.current, crawl_state: :crawled)
     end
   end

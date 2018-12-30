@@ -23,11 +23,6 @@
 #
 
 class Datapool::WebsiteResourceMetum < Datapool::ResourceMetum
-  include Datapool::AudioMetum
-  include Datapool::ImageMetum
-  include Datapool::PdfMetum
-  include Datapool::ThreedModelMetum
-  include Datapool::VideoMetum
 end
 
 
