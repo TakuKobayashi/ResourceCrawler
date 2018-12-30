@@ -11,7 +11,7 @@ class Datapool::ResourceBase < ApplicationRecord
     self.remain_src = remain_src
   end
 
-  def self.find_basic_src_by_url(url:)
+  def self.find_by_basic_src_from_url(url:)
     urls = [url].flatten.uniq
     basic_srces = []
     urls.each do |u|
@@ -21,8 +21,14 @@ class Datapool::ResourceBase < ApplicationRecord
     return self.where(basic_src: basic_srces)
   end
 
+  def self.find_by_url(url:)
+    urls = [url].flatten.uniq
+    src_resources = self.find_by_basic_src_from_url(url: url).index_by(&:src)
+    return urls.map{|url| src_resources[url.to_s] }
+  end
+
   def self.import_resources!(resources:)
-    src_resources = self.find_origin_src_by_url(url: resources.map(&:src).uniq).index_by(&:src)
+    src_resources = self.find_by_basic_src_from_url(url: resources.map(&:src).uniq).index_by(&:src)
     import_resources = resources.select{|imp| src_resources[imp.src].blank? }.uniq(&:src)
     if import_resources.present?
       self.import!(import_resources)

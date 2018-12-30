@@ -47,20 +47,20 @@ class Datapool::GoogleSearchMetum < Datapool::ResourceMetum
 
   # 画像ファイルの拡張子の後ろに何かゴミがついていることがあるので、それは取り除く
   def self.laundering_url_path(url:)
-    image_url = Addressable::URI.parse(url.to_s)
-    pathes = image_url.path.split("/")
+    resource_url = Addressable::URI.parse(url.to_s)
+    pathes = resource_url.path.split("/")
     if pathes.size > 0
-      pathes[pathes.size - 1] = self.match_filename(image_url.to_s)
+      pathes[pathes.size - 1] = self.match_filename(resource_url.to_s)
     else
-      pathes = [("/" + self.match_filename(image_url.to_s))]
+      pathes = [("/" + self.match_filename(resource_url.to_s))]
     end
-    image_url.path = pathes.join("/")
-    return image_url.to_s
+    resource_url.path = pathes.join("/")
+    return resource_url.to_s
   end
 
   def self.import_search_images!(search_url:, keyword:, number: 0, options: {})
-    images = []
-    websites = []
+    website_src_websites = {}
+    website_src_images = {}
     img_dom = RequestParser.request_and_parse_html(url: search_url.to_s, options: {:follow_redirect => true})
     searched_urls = img_dom.css("a").map{|a| Addressable::URI.parse(a["href"].to_s) }
     web_attributes = img_dom.css(".rg_meta").map do |a|
@@ -86,7 +86,7 @@ class Datapool::GoogleSearchMetum < Datapool::ResourceMetum
       split_keywords = keyword.to_s.split(" ")
       image = self.constract(
         url: image_url.to_s,
-        title: split_keywords.first,
+        title: keyword.to_s,
         check_file: true,
         options: {
           keywords: keyword.to_s,
@@ -96,7 +96,7 @@ class Datapool::GoogleSearchMetum < Datapool::ResourceMetum
       if image.blank?
         image = self.constract(
           url: searched_thumbnail_urls[index].to_s,
-          title: split_keywords.first,
+          title: keyword.to_s,
           check_file: true,
           options: {
             keyword: keyword.to_s,
@@ -105,18 +105,27 @@ class Datapool::GoogleSearchMetum < Datapool::ResourceMetum
         )
       end
       if image.present?
-        images << image
         web_attribute = web_attributes[index] || {}
-        website = Datapool::Website.new(
+        website = self.constract(
+          url: link_metum["imgrefurl"].to_s,
           title: web_attribute["pt"].to_s,
-          options: {keyword: keyword.to_s, number: number + counter + 1}
+          options: {
+            keyword: keyword.to_s,
+            number: number + counter + 1
+          }
         )
-        website.src = link_metum["imgrefurl"].to_s
-        websites << website
+        website_src_websites[link_metum["imgrefurl"].to_s] = website
+        website_src_images[link_metum["imgrefurl"].to_s] = image
         counter = counter + 1
       end
     end
-    Datapool::Website.import_resources!(resources: websites)
+    Datapool::Website.import_resources!(resources: website_src_websites.values)
+    websites = Datapool::Website.find_by_url(url: website_src_websites.keys)
+    images = websites.map do |website|
+      image = website_src_images[website.src]
+      image.try(:datapool_website_id, website.id)
+      image
+    end.compact
     self.import_resources!(resources: images)
     return images
   end
