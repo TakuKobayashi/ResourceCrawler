@@ -6,7 +6,7 @@
 #  title           :string(255)      not null
 #  basic_src       :string(255)      not null
 #  remain_src      :text(65535)
-#  crawl_state     :integer          default("plane"), not null
+#  crawl_state     :integer          default("single_standby"), not null
 #  last_crawl_time :datetime
 #  options         :text(65535)
 #

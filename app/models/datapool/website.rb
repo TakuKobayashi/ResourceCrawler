@@ -6,7 +6,7 @@
 #  title           :string(255)      not null
 #  basic_src       :string(255)      not null
 #  remain_src      :text(65535)
-#  crawl_state     :integer          default("plane"), not null
+#  crawl_state     :integer          default("single_standby"), not null
 #  last_crawl_time :datetime
 #  options         :text(65535)
 #
@@ -20,9 +20,11 @@ class Datapool::Website < Datapool::ResourceBase
   has_many :resources, class_name: 'Datapool::ResourceMetum', foreign_key: :datapool_website_id
 
   enum crawl_state: {
-    plane: 0,
-    will_recrawl: 1,
-    crawled: 2
+    single_standby: 0,
+    single_crawled: 1,
+    cycle_crawl_standby: 10,
+    cycle_crawling: 11,
+    cycle_crawled: 12,
   }
 
   def self.constract_from_tweet(tweet:, options: {})
@@ -73,7 +75,7 @@ class Datapool::Website < Datapool::ResourceBase
     end
     self.transaction do
       Datapool::WebsiteResourceMetum.import_resources!(resources: resource_meta)
-      self.update!(last_crawl_time: Time.current, crawl_state: :crawled)
+      self.update!(last_crawl_time: Time.current, crawl_state: :single_crawled)
     end
   end
 end
