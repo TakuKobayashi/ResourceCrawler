@@ -25,7 +25,7 @@
 class Datapool::GoogleSearchMetum < Datapool::ResourceMetum
   GOOGLE_SEARCH_URL = "https://www.google.co.jp/search"
 
-  def self.crawl_images!(keyword:)
+  def self.search_images!(keyword:)
     all_images = []
     counter = 0
     loop do

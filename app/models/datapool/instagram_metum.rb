@@ -25,7 +25,7 @@
 class Datapool::InstagramMetum < Datapool::ResourceMetum
   INSTAGRAM_TAG_SEARCH_API_URL = "https://www.instagram.com/explore/tags/"
 
-  def self.crawl_images!(keyword:)
+  def self.search_resources!(keyword:)
     all_images = []
     counter = 0
     images = []
