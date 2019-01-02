@@ -65,9 +65,12 @@ class Datapool::ResourceMetum < Datapool::ResourceBase
     url.strip!
     sanitized_title = Sanitizer.basic_sanitize(title)
     new_resource_class = self.new
+    if Datapool::YoutubeResourceMetum.youtube?(url)
+      new_resource_class = Datapool::YoutubeResourceMetum.new
+    end
     new_resource_class.datapool_website_id = website_id
     new_resource_class.title = sanitized_title
-    new_resource_class.resource_genre = Datapool::ResourceMetum.suggest_genre(url)
+    new_resource_class.resource_genre = new_resource_class.class.suggest_genre(url)
     new_resource_class.filename = url
     new_resource_class.src = url
     new_resource_class.options = options
