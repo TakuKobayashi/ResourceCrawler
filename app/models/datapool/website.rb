@@ -68,11 +68,15 @@ class Datapool::Website < Datapool::ResourceBase
 
   def scrape_cycle_links!
     html_dom = self.get_html_dom
-    urls = html_dom.css("a").map{|atag| atag[:href]}
-    src_website = Datapool::Website.find_by_url(url: urls).index_by(&:src)
-    new_urls = urls.select{|url| src_website[url].present? }
-    websites = new_urls.map do |url|
-      ws = Datapool::Website.new(crawl_state: :cycle_crawling)
+    url_text = {}
+    html_dom.css("a").each do |atag|
+      url_text[atag[:href]] = atag.text
+    end
+    src_website = Datapool::Website.find_by_url(url: url_text.keys).index_by(&:src)
+    new_url_text = url_text.select{|url, text| src_website[url].present? }
+    websites = new_url_text.map do |url, text|
+      ws = Datapool::Website.constract(url: url, title: text)
+      ws.crawl_state = :cycle_crawling
       ws.src = url
       ws
     end
