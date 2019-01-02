@@ -40,6 +40,10 @@ class Datapool::YoutubeResourceMetum < Datapool::ResourceMetum
     end
   end
 
+  def self.suggest_genre(url)
+    return :video
+  end
+
   def download_resource
     aurl = Addressable::URI.parse(self.src)
     file_name = self.filename + ".mp4"
