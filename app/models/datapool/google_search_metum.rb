@@ -2,24 +2,26 @@
 #
 # Table name: datapool_resource_meta
 #
-#  id                  :bigint(8)        not null, primary key
-#  type                :string(255)
-#  datapool_website_id :integer
-#  resource_genre      :integer          default("unknown"), not null
-#  title               :string(255)      not null
-#  original_filename   :text(65535)
-#  basic_src           :string(255)      not null
-#  remain_src          :text(65535)
-#  file_size           :integer          default(0), not null
-#  md5sum              :string(255)      default(""), not null
-#  backup_url          :string(255)
-#  options             :text(65535)
+#  id                    :bigint(8)        not null, primary key
+#  type                  :string(255)
+#  datapool_website_uuid :string(255)
+#  uuid                  :string(255)      not null
+#  resource_genre        :integer          default("unknown"), not null
+#  title                 :string(255)      not null
+#  original_filename     :text(65535)
+#  basic_src             :string(255)      not null
+#  remain_src            :text(65535)
+#  file_size             :integer          default(0), not null
+#  md5sum                :string(255)      default(""), not null
+#  backup_url            :string(255)
+#  options               :text(65535)
 #
 # Indexes
 #
-#  index_datapool_resource_meta_on_basic_src_and_type   (basic_src,type)
-#  index_datapool_resource_meta_on_datapool_website_id  (datapool_website_id)
-#  index_datapool_resource_meta_on_md5sum               (md5sum)
+#  index_datapool_resource_meta_on_basic_src_and_type     (basic_src,type)
+#  index_datapool_resource_meta_on_datapool_website_uuid  (datapool_website_uuid)
+#  index_datapool_resource_meta_on_md5sum                 (md5sum)
+#  index_datapool_resource_meta_on_uuid                   (uuid) UNIQUE
 #
 
 class Datapool::GoogleSearchMetum < Datapool::ResourceMetum
@@ -59,8 +61,8 @@ class Datapool::GoogleSearchMetum < Datapool::ResourceMetum
   end
 
   def self.import_search_images!(search_url:, keyword:, number: 0, options: {})
-    website_src_websites = {}
-    website_src_images = {}
+    websites = []
+    images = []
     img_dom = RequestParser.request_and_parse_html(url: search_url.to_s, options: {:follow_redirect => true})
     searched_urls = img_dom.css("a").map{|a| Addressable::URI.parse(a["href"].to_s) }
     web_attributes = img_dom.css(".rg_meta").map do |a|
@@ -114,18 +116,13 @@ class Datapool::GoogleSearchMetum < Datapool::ResourceMetum
             number: number + counter + 1
           }
         )
-        website_src_websites[link_metum["imgrefurl"].to_s] = website
-        website_src_images[link_metum["imgrefurl"].to_s] = image
+        image.datapool_website_uuid = website.uuid
+        websites << website
+        images << image
         counter = counter + 1
       end
     end
-    Datapool::Website.import_resources!(resources: website_src_websites.values)
-    websites = Datapool::Website.find_by_url(url: website_src_websites.keys)
-    images = websites.map do |website|
-      image = website_src_images[website.src]
-      image.try(:datapool_website_id, website.id)
-      image
-    end.compact
+    Datapool::Website.import_resources!(resources: websites)
     self.import_resources!(resources: images)
     return images
   end

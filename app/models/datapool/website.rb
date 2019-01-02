@@ -5,6 +5,7 @@
 #  id              :bigint(8)        not null, primary key
 #  title           :string(255)      not null
 #  basic_src       :string(255)      not null
+#  uuid            :string(255)      not null
 #  remain_src      :text(65535)
 #  crawl_state     :integer          default("single_standby"), not null
 #  last_crawl_time :datetime
@@ -13,11 +14,12 @@
 # Indexes
 #
 #  index_datapool_websites_on_basic_src  (basic_src)
+#  index_datapool_websites_on_uuid       (uuid) UNIQUE
 #
 
 class Datapool::Website < Datapool::ResourceBase
   serialize :options, JSON
-  has_many :resources, class_name: 'Datapool::ResourceMetum', foreign_key: :datapool_website_id
+  has_many :resources, class_name: 'Datapool::ResourceMetum', primary_key: uuid, foreign_key: :datapool_website_uuid
 
   enum crawl_state: {
     single_standby: 0,
@@ -46,6 +48,7 @@ class Datapool::Website < Datapool::ResourceBase
 
   def self.constract(url:, title:, options: {})
     website = Datapool::Website.new
+    website.uuid = SecureRandom.hex(31)
     website.src = url.to_s
     website.title = title
     website.options = options
@@ -104,7 +107,7 @@ class Datapool::Website < Datapool::ResourceBase
         check_file: true,
         options: {}
       )
-      resource.website_id = self.id
+      resource.datapool_website_uuid = self.uuid
       resource
     end
     self.transaction do

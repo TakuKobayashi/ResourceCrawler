@@ -2,7 +2,8 @@ class CreateDatapoolResourceMeta < ActiveRecord::Migration[5.2]
   def change
     create_table :datapool_resource_meta do |t|
       t.string :type
-      t.integer :datapool_website_id
+      t.string :datapool_website_uuid
+      t.string :uuid, null: false
       t.integer :resource_genre, null: false, default: 0
       t.string :title, null: false
       t.text :original_filename
@@ -14,7 +15,8 @@ class CreateDatapoolResourceMeta < ActiveRecord::Migration[5.2]
       t.text :options
     end
 
-    add_index :datapool_resource_meta, :datapool_website_id
+    add_index :datapool_resource_meta, :datapool_website_uuid
+    add_index :datapool_resource_meta, :uuid, unique: true
     add_index :datapool_resource_meta, :md5sum
     add_index :datapool_resource_meta, [:basic_src, :type]
   end
