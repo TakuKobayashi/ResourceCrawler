@@ -56,8 +56,8 @@ module Sanitizer
     return text.gsub(/[【】、。《》「」〔〕・（）［］｛｝！＂＃＄％＆＇＊＋，－．／：；＜＝＞？＠＼＾＿｀｜￠￡￣\(\)\[\]<>{},!? \.\-\+\\~^='&%$#\"\'_\/;:*‼•一]/, "")
   end
 
-  def self.scan_json(text)
-    return text.scan(/({.*}|[.*])/).join
+  def self.scan_brace(text)
+    return text.scan(/{.*}/)
   end
 
   def self.separate_kaomoji(text)

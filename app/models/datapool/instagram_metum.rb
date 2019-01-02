@@ -29,17 +29,22 @@ class Datapool::InstagramMetum < Datapool::ResourceMetum
     all_images = []
     counter = 0
     images = []
-    doc = RequestParser.request_and_parse_html(url: INSTAGRAM_TAG_SEARCH_API_URL + keyword.to_s + "/")
-    target_json_string = doc.css("script").map{|js_dom| js_dom.text.match(/\{.*}/).to_s }[2]
-    return nil if target_json_string.blank?
-    json_hash = {}
-    begin
-      json_hash = JSON.parse(target_json_string)
-    rescue JSON::ParserError => e
+    doc = RequestParser.request_and_parse_html(url: INSTAGRAM_TAG_SEARCH_API_URL + URI.encode(keyword.to_s) + "/")
+    target_json_strings = doc.css("script").map{|js_dom| Sanitizer.scan_brace(js_dom.text) }.flatten.uniq
+    target_json_hashes = target_json_strings.map do |json_string|
       json_hash = {}
+      begin
+        json_hash = JSON.parse(json_string)
+      rescue JSON::ParserError => e
+        json_hash = {}
+      end
+      p json_hash
+      json_hash
     end
-    json_hash["entry_data"]["TagPage"].each do |hash|
-      hash["graphql"]["hashtag"]
+    target_json_hashes.select!(&:present?)
+    return target_json_hashes
+ #   json_hash["entry_data"]["TagPage"].each do |hash|
+ #     hash["graphql"]["hashtag"]
       #https://www.instagram.com/graphql/query/?query_hash=ded47faa9a1aaded10161a2ff32abb6b&variables=%7B%22tag_name%22%3A%22hashtag%22%2C%22first%22%3A6%2C%22after%22%3A%22AQBaFbFAFi8BjvNFCwHWZDiqA4SWwRTf9jVotEHCJPSKWiY8mgm-tg2VwyfWfQp1CUT1TFE3D5DTqUTluAEVwTIV67xppOzuI7OgTIB2TeuBCQ%22%7D
       #query
       #{
@@ -56,6 +61,6 @@ class Datapool::InstagramMetum < Datapool::ResourceMetum
       #  x-instagram-gis: a249f8ce6a8e16edd3d17b761bb1a4c5
       #  x-requested-with: XMLHttpRequest
       #}
-    end
+   #end
   end
 end
