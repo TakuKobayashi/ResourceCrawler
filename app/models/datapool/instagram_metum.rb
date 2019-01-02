@@ -26,6 +26,7 @@
 
 class Datapool::InstagramMetum < Datapool::ResourceMetum
   INSTAGRAM_TAG_SEARCH_API_URL = "https://www.instagram.com/explore/tags/"
+  INSTAGRAM_QUERY_API_URL = "https://www.instagram.com/graphql/query/"
 
   def src=(url)
     aurl = Addressable::URI.parse(url)
@@ -63,12 +64,20 @@ class Datapool::InstagramMetum < Datapool::ResourceMetum
     target_json_hashes = self.search_inithialize_page_json_hashes(keyword: keyword)
     hashtags = self.mine_main_data(target_json_hashes)
     page_info = hashtags["edge_hashtag_to_media"]["page_info"]
-    page_info["end_cursor"]
-    page_info["has_next_page"]
+    query_url = Addressable::URI.parse(INSTAGRAM_QUERY_API_URL)
     resources = self.import_from_json_hashtags!(hashtags["edge_hashtag_to_media"])
+    query_url.query_values = {
+      query_hash: "f92f56d47dc7a55b606908374b43a314",
+      variables: {
+        tag_name: keyword,
+        show_ranked: false,
+        first: resources.size,
+        after: page_info["end_cursor"]
+      }.to_json
+    }
     resources += self.import_from_json_hashtags!(hashtags["edge_hashtag_to_top_posts"])
     resources += self.import_from_json_hashtags!(hashtags["edge_hashtag_to_content_advisory"])
-    return resources
+    return query_url.to_s
   end
 
   def self.import_from_json_hashtags!(hashtags)
