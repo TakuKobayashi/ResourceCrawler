@@ -73,7 +73,8 @@ class Datapool::Website < Datapool::ResourceBase
     html_dom = self.get_html_dom
     url_text = {}
     html_dom.css("a").each do |atag|
-      url_text[atag[:href]] = atag.text
+      full_url = WebNormalizer.merge_full_url(src: URI.encode(atag[:href].to_s), org: self.src)
+      url_text[full_url] = atag.text
     end
     src_website = Datapool::Website.find_by_url(url: url_text.keys).index_by(&:src)
     new_url_text = url_text.select{|url, text| src_website[url].present? }
@@ -101,8 +102,9 @@ class Datapool::Website < Datapool::ResourceBase
       contents += Sanitizer.scan_url_path_resources(text.downcase, Datapool::ResourceMetum.resource_file_extensions)
     end
     resource_meta = contents.uniq.map do |url|
+      full_url = WebNormalizer.merge_full_url(src: URI.encode(url.to_s), org: self.src)
       resource = Datapool::WebsiteResourceMetum.constract(
-        url: url,
+        url: full_url,
         title: self.title,
         check_file: true,
         options: {}

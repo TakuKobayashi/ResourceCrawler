@@ -3,6 +3,7 @@ module WebNormalizer
       src_url = Addressable::URI.parse(src.to_s.gsub(/(\.\.\/|\.\/)+/,"/"))
       org_url = Addressable::URI.parse(org.to_s)
       pathes = src_url.path.to_s.split("/")
+      # #記号のあとにあるものは
       # 空っぽもありうる
       if pathes.last.try(:include?, "#")
         pathes[pathes.size - 1] = pathes.last.gsub(/#.*/, "")
