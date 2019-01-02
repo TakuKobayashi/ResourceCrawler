@@ -44,7 +44,7 @@ module Sanitizer
   end
 
   def self.scan_url_path_resources(text, exts = [])
-    return text.scan(/((https?|ftp)(:\/\/)|[a-zA-Z0-9.%]*?\/)([-_.!~*\'()a-zA-Z0-9;\/?:\@&=+\$,%#]+#{exts.join("|")})/).map(&:join).map(&:strip)
+    return text.scan(/((https?|ftp)(:\/\/)|(\.\.\/|\.\/|\/))([-_.!~*\'()a-zA-Z0-9;\/?:\@&=+\$,%#]+#{exts.join("|")})/).map(&:join).map(&:strip)
   end
 
   def self.delete_urls(text)
