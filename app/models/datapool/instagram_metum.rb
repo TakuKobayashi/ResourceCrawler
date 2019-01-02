@@ -25,10 +25,17 @@
 class Datapool::InstagramMetum < Datapool::ResourceMetum
   INSTAGRAM_TAG_SEARCH_API_URL = "https://www.instagram.com/explore/tags/"
 
-  def self.search_resources!(keyword:)
-    all_images = []
-    counter = 0
-    images = []
+  def src=(url)
+    aurl = Addressable::URI.parse(url)
+    self.basic_src = aurl.origin.to_s + aurl.path.to_s
+    if aurl.query.present?
+      self.remain_src = "?" + aurl.query.to_s
+    else
+      self.remain_src = ""
+    end
+  end
+
+  def self.search_inithialize_page_json_hashes(keyword:)
     doc = RequestParser.request_and_parse_html(url: INSTAGRAM_TAG_SEARCH_API_URL + URI.encode(keyword.to_s) + "/")
     target_json_strings = doc.css("script").map{|js_dom| Sanitizer.scan_brace(js_dom.text) }.flatten.uniq
     target_json_hashes = target_json_strings.map do |json_string|
@@ -38,29 +45,67 @@ class Datapool::InstagramMetum < Datapool::ResourceMetum
       rescue JSON::ParserError => e
         json_hash = {}
       end
-      p json_hash
       json_hash
     end
-    target_json_hashes.select!(&:present?)
-    return target_json_hashes
- #   json_hash["entry_data"]["TagPage"].each do |hash|
- #     hash["graphql"]["hashtag"]
-      #https://www.instagram.com/graphql/query/?query_hash=ded47faa9a1aaded10161a2ff32abb6b&variables=%7B%22tag_name%22%3A%22hashtag%22%2C%22first%22%3A6%2C%22after%22%3A%22AQBaFbFAFi8BjvNFCwHWZDiqA4SWwRTf9jVotEHCJPSKWiY8mgm-tg2VwyfWfQp1CUT1TFE3D5DTqUTluAEVwTIV67xppOzuI7OgTIB2TeuBCQ%22%7D
-      #query
-      #{
-      #  query_hash: ded47faa9a1aaded10161a2ff32abb6b
-      #  variables: {"tag_name":"hashtag","first":6,"after":"AQBaFbFAFi8BjvNFCwHWZDiqA4SWwRTf9jVotEHCJPSKWiY8mgm-tg2VwyfWfQp1CUT1TFE3D5DTqUTluAEVwTIV67xppOzuI7OgTIB2TeuBCQ"}
-      #}
-      #request header
-      #{
-      #  :authority: www.instagram.com
-      #  :path: /graphql/query/?query_hash=ded47faa9a1aaded10161a2ff32abb6b&variables=%7B%22tag_name%22%3A%22hashtag%22%2C%22first%22%3A6%2C%22after%22%3A%22AQBaFbFAFi8BjvNFCwHWZDiqA4SWwRTf9jVotEHCJPSKWiY8mgm-tg2VwyfWfQp1CUT1TFE3D5DTqUTluAEVwTIV67xppOzuI7OgTIB2TeuBCQ%22%7D
-      #  cookie: csrftoken=1hQXvpaBvOPFkRe5neqRpnlm4cD4M5HH; mid=WnF7-AAEAAHv78teJV4zW5h2gXQC; fbm_124024574287414=base_domain=.instagram.com; rur=FTW; fbsr_124024574287414=tBZYx7w6U8gIQg6Q4oa7Ym3MF-W5tS-7y7N5E2WB_no.eyJhbGdvcml0aG0iOiJITUFDLVNIQTI1NiIsImNvZGUiOiJBUUNMRWFOdjVHYjl2enc5blFYV0JfSHpPaW8ydUJSOFBJOXJzUUdGbEUxZHYySXRmUFAwVWo3RTNaVUU1X19MY0U3U0Fob0lMM2hLMUlXcTZya080bldkWUZaWDFsNFdlVVE0aUdSdjFWQW1kNERoSFkzc0xEZkNQVXU2eUFRWjNGWk83TWRaTHBQVWtJSndVY0VnOGtIalZ5RHpTTFFQTkpnTzljeVA3eEdNYnhib3pQUVBINC1YWlVLU3VZdjJWMWNhWDIzTTlSVi1UQXNMVEM0WDQzcHlXTktna3BaODN1LVlYQWVDT1ZqRU1LLURjSmdGaVl1Zk9nOWdWUVNkdFBycndOY2xMWnBjSk0tMnU2YU5PX3R2TDM0MnczWk92X09KUWNhZksxMlU3TXZfMTB3bXo0VG1qQnZ1NnJzZVR1TFVieDNleDRoWGNQcTRsN2Y0aUJvcCIsImlzc3VlZF9hdCI6MTUyNjYyNDYxOCwidXNlcl9pZCI6IjEwMDAwMTg5Mjc5OTM0MCJ9; urlgen="{\"time\": 1526624603\054 \"27.110.34.94\": 10021}:1fJYnr:LHcSlC2cJ-KGO_RQaRyH02wjIk8"
-      #  referer: https://www.instagram.com/explore/tags/hashtag/
-      #  user-agent: Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.139 Mobile Safari/537.36
-      #  x-instagram-gis: a249f8ce6a8e16edd3d17b761bb1a4c5
-      #  x-requested-with: XMLHttpRequest
-      #}
-   #end
+    return target_json_hashes.select(&:present?)
+  end
+
+  def self.suggest_genre(url)
+    return :image
+  end
+
+  def self.search_and_import_resources!(keyword:)
+    all_images = []
+    counter = 0
+    images = []
+    target_json_hashes = self.search_inithialize_page_json_hashes(keyword: keyword)
+    hashtags = self.mine_main_data(target_json_hashes)
+    page_info = hashtags["edge_hashtag_to_media"]["page_info"]
+    page_info["end_cursor"]
+    page_info["has_next_page"]
+    resources = self.import_from_json_hashtags!(hashtags["edge_hashtag_to_media"])
+    resources += self.import_from_json_hashtags!(hashtags["edge_hashtag_to_top_posts"])
+    resources += self.import_from_json_hashtags!(hashtags["edge_hashtag_to_content_advisory"])
+    return resources
+  end
+
+  def self.import_from_json_hashtags!(hashtags)
+    edges = hashtags["edges"]
+    resources = edges.map do |edge|
+      node = edge["node"] || {}
+      caption = node["edge_media_to_caption"]["edges"].map{|e| e["node"]["text"] }.join
+      title_body = caption.split(/[ |\n]#/).first.to_s.truncate(255)
+      resource = self.constract(
+        url: node["display_url"] || node["thumbnail_src"],
+        title: title_body,
+        options: {
+          content_id: node["id"],
+          post_user_id: node["owner"]["id"],
+          post_at: Time.at(node["taken_at_timestamp"].to_i)
+        }
+      )
+      if node["is_video"]
+        resource.resource_genre = :video
+      end
+      resource
+    end
+    self.import_resources!(resources: resources)
+    return resources
+  end
+
+  private
+  def self.mine_main_data(target_json_hashes)
+    hashkeys = ["entry_data","TagPage", "graphql", "hashtag"]
+    hashes = target_json_hashes.map do |hash|
+      hashtags = hashkeys.inject(hash) do |result, key|
+        if result[key].instance_of?(Array)
+          result = result[key].first || {}
+        else
+          result = result[key] || {}
+        end
+        result
+      end
+    end
+    return hashes.detect(&:present?)
   end
 end
