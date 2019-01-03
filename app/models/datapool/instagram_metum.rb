@@ -27,6 +27,7 @@
 class Datapool::InstagramMetum < Datapool::ResourceMetum
   INSTAGRAM_TAG_SEARCH_API_URL = "https://www.instagram.com/explore/tags/"
   INSTAGRAM_QUERY_API_URL = "https://www.instagram.com/graphql/query/"
+  INSTAGRAM_TARGET_JS_FILENAMES = ["Consumer.js"]
 
   def src=(url)
     aurl = Addressable::URI.parse(url)
@@ -63,6 +64,11 @@ class Datapool::InstagramMetum < Datapool::ResourceMetum
     images = []
     target_json_hashes = self.search_inithialize_page_json_hashes(keyword: keyword)
     hashtags = self.mine_main_data(target_json_hashes)
+    jsfiles = self.mine_extra_js_files(target_json_hashes)
+    jsscripts = jsfiles.map do |num, jsfilepath|
+      full_url = WebNormalizer.merge_full_url(src: jsfilepath, org: INSTAGRAM_TAG_SEARCH_API_URL)
+      RequestParser.request_and_response_body(url: full_url)
+    end
     page_info = hashtags["edge_hashtag_to_media"]["page_info"]
     query_url = Addressable::URI.parse(INSTAGRAM_QUERY_API_URL)
     resources = self.import_from_json_hashtags!(hashtags["edge_hashtag_to_media"])
@@ -77,7 +83,7 @@ class Datapool::InstagramMetum < Datapool::ResourceMetum
     }
     resources += self.import_from_json_hashtags!(hashtags["edge_hashtag_to_top_posts"])
     resources += self.import_from_json_hashtags!(hashtags["edge_hashtag_to_content_advisory"])
-    return query_url.to_s
+    return jsscripts
   end
 
   def self.import_from_json_hashtags!(hashtags)
@@ -118,5 +124,12 @@ class Datapool::InstagramMetum < Datapool::ResourceMetum
       end
     end
     return hashes.detect(&:present?)
+  end
+
+  def self.mine_extra_js_files(target_json_hashes)
+    js_file_hash = target_json_hashes.detect do |hash|
+      hash.values.all?{|v| v.is_a?(String)}
+    end
+    return js_file_hash
   end
 end
