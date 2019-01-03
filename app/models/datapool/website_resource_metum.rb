@@ -25,6 +25,11 @@
 #
 
 class Datapool::WebsiteResourceMetum < Datapool::ResourceMetum
+  def src=(url)
+    basic_src, remain_src = WebNormalizer.url_partition(url: url)
+    self.basic_src = basic_src
+    self.remain_src = remain_src
+  end
 end
 
 

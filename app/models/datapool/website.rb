@@ -29,6 +29,12 @@ class Datapool::Website < Datapool::ResourceBase
     cycle_crawled: 12,
   }
 
+  def src=(url)
+    basic_src, remain_src = WebNormalizer.url_partition(url: url)
+    self.basic_src = basic_src
+    self.remain_src = remain_src
+  end
+
   def self.constract_from_tweet(tweet:, options: {})
     return [] unless tweet.urls?
     tweet_text = Sanitizer.delete_urls(tweet.text)
@@ -76,16 +82,13 @@ class Datapool::Website < Datapool::ResourceBase
       full_url = WebNormalizer.merge_full_url(src: URI.encode(atag[:href].to_s), org: self.src)
       url_text[full_url] = atag.text
     end
-    src_website = Datapool::Website.find_by_url(url: url_text.keys).index_by(&:src)
-    new_url_text = url_text.select{|url, text| src_website[url].present? }
-    websites = new_url_text.map do |url, text|
+    websites = url_text.map do |url, text|
       ws = Datapool::Website.constract(url: url, title: text)
       ws.crawl_state = :cycle_crawling
-      ws.src = url
       ws
     end
     self.transaction do
-      Datapool::Website.import(websites)
+      Datapool::Website.import_resources!(resources: websites)
       self.update!(last_crawl_time: Time.current, crawl_state: :cycle_crawled)
     end
   end
@@ -116,27 +119,5 @@ class Datapool::Website < Datapool::ResourceBase
       Datapool::WebsiteResourceMetum.import_resources!(resources: resource_meta)
       self.update!(last_crawl_time: Time.current, crawl_state: :single_crawled)
     end
-  end
-
-  protected
-  def self.url_partition(url:)
-    aurl = Addressable::URI.parse(url)
-    pure_url = URI.unescape(aurl.origin.to_s + aurl.path.to_s)
-    if pure_url.size > 255
-      word_counter = 0
-      srces, other_pathes = pure_url.split("/").partition do |word|
-        word_counter = word_counter + word.size + 1
-        word_counter <= 255
-      end
-      basic_src = srces.join("/")
-      remain_src = "/" + other_pathes.join("/")
-    else
-      basic_src = pure_url
-      remain_src = ""
-    end
-    if aurl.query.present?
-      remain_src += "?" + aurl.query
-    end
-    return basic_src, URI.unescape(remain_src)
   end
 end

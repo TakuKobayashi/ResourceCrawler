@@ -27,6 +27,12 @@
 class Datapool::GoogleSearchMetum < Datapool::ResourceMetum
   GOOGLE_SEARCH_URL = "https://www.google.co.jp/search"
 
+  def src=(url)
+    basic_src, remain_src = WebNormalizer.url_partition(url: url)
+    self.basic_src = basic_src
+    self.remain_src = remain_src
+  end
+
   def self.search_images!(keyword:)
     all_images = []
     counter = 0
@@ -125,27 +131,5 @@ class Datapool::GoogleSearchMetum < Datapool::ResourceMetum
     Datapool::Website.import_resources!(resources: websites)
     self.import_resources!(resources: images)
     return images
-  end
-
-  protected
-  def self.url_partition(url:)
-    aurl = Addressable::URI.parse(url)
-    pure_url = URI.unescape(aurl.origin.to_s + aurl.path.to_s)
-    if pure_url.size > 255
-      word_counter = 0
-      srces, other_pathes = pure_url.split("/").partition do |word|
-        word_counter = word_counter + word.size + 1
-        word_counter <= 255
-      end
-      basic_src = srces.join("/")
-      remain_src = "/" + other_pathes.join("/")
-    else
-      basic_src = pure_url
-      remain_src = ""
-    end
-    if aurl.query.present?
-      remain_src += "?" + aurl.query
-    end
-    return basic_src, URI.unescape(remain_src)
   end
 end
