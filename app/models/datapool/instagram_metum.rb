@@ -27,7 +27,7 @@
 class Datapool::InstagramMetum < Datapool::ResourceMetum
   INSTAGRAM_TAG_SEARCH_API_URL = "https://www.instagram.com/explore/tags/"
   INSTAGRAM_QUERY_API_URL = "https://www.instagram.com/graphql/query/"
-  INSTAGRAM_TARGET_JS_FILENAMES = ["Consumer.js"]
+  INSTAGRAM_TARGET_JS_FILENAME = "Consumer.js"
 
   def src=(url)
     aurl = Addressable::URI.parse(url)
@@ -65,25 +65,27 @@ class Datapool::InstagramMetum < Datapool::ResourceMetum
     target_json_hashes = self.search_inithialize_page_json_hashes(keyword: keyword)
     hashtags = self.mine_main_data(target_json_hashes)
     jsfiles = self.mine_extra_js_files(target_json_hashes)
-    jsscripts = jsfiles.map do |num, jsfilepath|
-      full_url = WebNormalizer.merge_full_url(src: jsfilepath, org: INSTAGRAM_TAG_SEARCH_API_URL)
-      RequestParser.request_and_response_body(url: full_url)
-    end
+    query_hash = self.extract_probable_query_hash(jsfiles)
+
     page_info = hashtags["edge_hashtag_to_media"]["page_info"]
     query_url = Addressable::URI.parse(INSTAGRAM_QUERY_API_URL)
     resources = self.import_from_json_hashtags!(hashtags["edge_hashtag_to_media"])
+    # TODO firstを適切な値にする
     query_url.query_values = {
-      query_hash: "f92f56d47dc7a55b606908374b43a314",
+      query_hash: query_hash,
       variables: {
         tag_name: keyword,
         show_ranked: false,
-        first: resources.size,
+        first: 10,
         after: page_info["end_cursor"]
       }.to_json
     }
+# TODO x-instagram-gisを適切な値を算出する。以下はheaderに入れるべき値
+#  'user-agent' => 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.98 Safari/537.36',
+#  'x-instagram-gis' => '00d4c483b3f585908d46dbe0d0ebe039'
     resources += self.import_from_json_hashtags!(hashtags["edge_hashtag_to_top_posts"])
     resources += self.import_from_json_hashtags!(hashtags["edge_hashtag_to_content_advisory"])
-    return jsscripts
+    return query_url.to_s
   end
 
   def self.import_from_json_hashtags!(hashtags)
@@ -131,5 +133,14 @@ class Datapool::InstagramMetum < Datapool::ResourceMetum
       hash.values.all?{|v| v.is_a?(String)}
     end
     return js_file_hash
+  end
+
+  def self.extract_probable_query_hash(jsfiles)
+    number, targetjsfile = jsfiles.detect{|num, jsfilepath| jsfilepath.include?(INSTAGRAM_TARGET_JS_FILENAME) }
+    full_url = WebNormalizer.merge_full_url(src: targetjsfile, org: INSTAGRAM_TAG_SEARCH_API_URL)
+    jsscript = RequestParser.request_and_response_body(url: full_url)
+    # もうちょっといいやり方があってもいい気がするが...
+    query_hash = jsscript.scan(/queryId:\".+\"/).last
+    return query_hash.gsub(/queryId:/, "").gsub(/"/, "")
   end
 end
