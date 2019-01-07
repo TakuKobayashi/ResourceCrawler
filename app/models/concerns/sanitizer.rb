@@ -47,6 +47,10 @@ module Sanitizer
     return text.scan(/((https?|ftp)(:\/\/)|(\.\.\/|\.\/|\/))([-_.!~*\'()a-zA-Z0-9;\/?:\@&=+\$,%#]+#{exts.join("|")})/).map(&:join).map(&:strip)
   end
 
+  def self.scan_base64_image(text)
+    return text.scan(/\"data:image\/([a-zA-Z]*);base64,([^\"]*)\"/).map{|scanned| scanned.join.match(/\".*\"/).to_s.strip }
+  end
+
   def self.delete_urls(text)
     return text.gsub(/(https?|ftp)(:\/\/[-_.!~*\'()a-zA-Z0-9;\/?:\@&=+\$,%#]+)/, "")
   end
