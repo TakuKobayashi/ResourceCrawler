@@ -95,6 +95,10 @@ module Datapool::ThreedModelMetum
     ".wings",
     # Xfig Export
     ".fig",
+    # MMD
+    ".pmx",
+    # MMD Motion
+    ".vmd",
   ]
 
   def self.threed_model?(url)

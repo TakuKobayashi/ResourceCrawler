@@ -34,7 +34,8 @@ class Datapool::ResourceMetum < Datapool::ResourceBase
     audio: 3,
     pdf: 4,
     threed_model: 5,
-    text: 6
+    compressed: 6,
+    text: 7
   }
 
   S3_ROOT_URL = "https://taptappun.s3.amazonaws.com/"
@@ -58,6 +59,8 @@ class Datapool::ResourceMetum < Datapool::ResourceBase
       return :pdf
     elsif Datapool::ThreedModelMetum.threed_model?(url)
       return :threed_model
+    elsif Datapool::CompressedMetum.compressed_file?(url)
+      return :compressed
     else
       return :unknown
     end
@@ -106,6 +109,8 @@ class Datapool::ResourceMetum < Datapool::ResourceBase
       return "project/crawler/pdfs/"
     elsif self.threed_model?
       return "project/crawler/threed_models/"
+    elsif self.compressed?
+      return "project/crawler/compressed/"
     else
       return "project/crawler/resources/"
     end
@@ -122,6 +127,8 @@ class Datapool::ResourceMetum < Datapool::ResourceBase
       return "backup/crawler/pdfs/"
     elsif self.threed_model?
       return "backup/crawler/threed_models/"
+    elsif self.compressed?
+      return "project/crawler/compressed/"
     else
       return "backup/crawler/resources/"
     end
