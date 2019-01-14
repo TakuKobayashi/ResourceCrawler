@@ -67,7 +67,8 @@ class Datapool::NiconicoMetum < Datapool::ResourceMetum
     video_url_hash = info_json_hash["video"]["smileInfo"]
     http_client = HTTPClient.new
     http_client.receive_timeout = 60 * 120
-    result = http_client.get_content(video_url_hash["url"], header: {Cookie: 'nicohistory=sm783183%3A1547437251%3A1547437251%3Aead50dac17d90d30%3A1'})) do |chunk|
+    request_cookie = CGI.escape("sm783183:1547437251:1547437251:ead50dac17d90d30:1")
+    result = http_client.get_content(video_url_hash["url"], header: {Cookie: 'nicohistory=' + request_cookie})) do |chunk|
       block.call(chunk)
     end
     return video_url_hash["url"]
