@@ -59,19 +59,21 @@ class Datapool::NiconicoMetum < Datapool::ResourceMetum
     "nicovideo.jp"
   ]
 
-  def download_resource(&:block)
-    aurl = Addressable::URI.parse(self.src)
-    doc = RequestParser.request_and_parse_html(url: aurl.to_s, options: {:follow_redirect => true})
-    info_json = doc.css("#js-initial-watch-data").first
-    info_json_hash = JSON.parse(info_json["data-api-data"])
-    video_url_hash = info_json_hash["video"]["smileInfo"]
-    http_client = HTTPClient.new
-    http_client.receive_timeout = 60 * 120
-    request_cookie = CGI.escape("sm783183:1547437251:1547437251:ead50dac17d90d30:1")
-    result = http_client.get_content(video_url_hash["url"], header: {Cookie: 'nicohistory=' + request_cookie})) do |chunk|
-      block.call(chunk)
+  def download_resource(&block)
+    if self.video?
+      aurl = Addressable::URI.parse(self.src)
+      response = RequestParser.request_and_response(url: aurl.to_s, options: {:follow_redirect => true})
+      set_cookie_header = response.header["Set-Cookie"].detect{|cookie_str| cookie_str.include?("nicohistory=")}
+      doc = Nokogiri::HTML.parse(response.body)
+      info_json = doc.css("#js-initial-watch-data").first
+      info_json_hash = JSON.parse(info_json["data-api-data"])
+      video_url_hash = info_json_hash["video"]["smileInfo"]
+      http_client = HTTPClient.new
+      http_client.receive_timeout = 60 * 120
+      http_client.get_content(video_url_hash["url"], header: {Cookie: set_cookie_header}) do |chunk|
+        block.try(:call, chunk)
+      end
     end
-    return video_url_hash["url"]
   end
 
   def self.niconico_video?(url)

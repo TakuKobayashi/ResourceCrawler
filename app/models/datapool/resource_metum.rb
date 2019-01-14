@@ -156,7 +156,7 @@ class Datapool::ResourceMetum < Datapool::ResourceBase
     end
   end
 
-  def download_resource(&:block)
+  def download_resource(&block)
     http_client = HTTPClient.new
     http_client.receive_timeout = 60 * 120
     result = http_client.get_content(self.src) do |chunk|

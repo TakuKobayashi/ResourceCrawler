@@ -32,12 +32,17 @@ module RequestParser
   end
 
   def self.request_and_response_body(url: ,method: :get, params: {}, header: {}, body: {}, options: {})
+    response = self.request_and_response(url: url,method: method, params: params, header: header, body: body, options: options)
+    return response.try(:body).to_s
+  end
+
+  def self.request_and_response(url: ,method: :get, params: {}, header: {}, body: {}, options: {})
     http_client = HTTPClient.new
     http_client.ssl_config.verify_mode = OpenSSL::SSL::VERIFY_NONE
     http_client.connect_timeout = 600
     http_client.send_timeout    = 600
     http_client.receive_timeout = 600
-    result = ""
+    response = nil
     begin
       request_option_hash = {query: params, header: header, body: body}.merge(options)
       request_option_hash.delete_if{|k, v| v.blank? }
@@ -45,11 +50,10 @@ module RequestParser
       if response.status >= 400
         self.record_log(url: url, method: method, params: params, header: header, options: options, insert_top_messages: ["request Error Status Code: #{response.status}"])
       end
-      result = response.body
     rescue SocketError, HTTPClient::ConnectTimeoutError, HTTPClient::BadResponseError, Addressable::URI::InvalidURIError => e
       self.record_log(url: url, method: method, params: params, header: header, options: options, error_messages: ["error: #{e.message}"] + e.backtrace, insert_top_messages: ["exception:" + e.class.to_s])
     end
-    return result
+    return response
   end
 
   private
