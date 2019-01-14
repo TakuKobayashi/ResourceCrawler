@@ -4,6 +4,7 @@
 #
 #  id                    :bigint(8)        not null, primary key
 #  type                  :string(255)
+#  content_id            :string(255)
 #  datapool_website_uuid :string(255)
 #  uuid                  :string(255)      not null
 #  resource_genre        :integer          default("unknown"), not null
@@ -11,6 +12,7 @@
 #  original_filename     :text(65535)
 #  basic_src             :string(255)      not null
 #  remain_src            :text(65535)
+#  thumbnail_url         :string(255)
 #  file_size             :integer          default(0), not null
 #  md5sum                :string(255)      default(""), not null
 #  backup_url            :string(255)
@@ -18,10 +20,10 @@
 #
 # Indexes
 #
-#  index_datapool_resource_meta_on_basic_src_and_type     (basic_src,type)
-#  index_datapool_resource_meta_on_datapool_website_uuid  (datapool_website_uuid)
-#  index_datapool_resource_meta_on_md5sum                 (md5sum)
-#  index_datapool_resource_meta_on_uuid                   (uuid) UNIQUE
+#  index_datapool_resource_meta_on_basic_src_and_type  (basic_src,type)
+#  index_datapool_resource_meta_on_content_id          (content_id)
+#  index_datapool_resource_meta_on_md5sum              (md5sum)
+#  index_datapool_resource_meta_on_uuid                (uuid) UNIQUE
 #
 
 class Datapool::NiconicoMetum < Datapool::ResourceMetum
@@ -59,6 +61,10 @@ class Datapool::NiconicoMetum < Datapool::ResourceMetum
     "nicovideo.jp"
   ]
 
+  def self.suggest_genre(url)
+    return :video
+  end
+
   def download_resource(&block)
     if self.video?
       aurl = Addressable::URI.parse(self.src)
@@ -73,6 +79,13 @@ class Datapool::NiconicoMetum < Datapool::ResourceMetum
       http_client.get_content(video_url_hash["url"], header: {Cookie: set_cookie_header}) do |chunk|
         block.try(:call, chunk)
       end
+      update!(
+        content_id: info_json_hash["video"]["id"],
+        thumbnail_url: info_json_hash["video"]["thumbnailURL"],
+        options: {
+          true_content_url: video_url_hash["url"]
+        }
+      )
     end
   end
 
