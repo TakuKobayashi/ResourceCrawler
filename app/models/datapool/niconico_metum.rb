@@ -59,18 +59,18 @@ class Datapool::NiconicoMetum < Datapool::ResourceMetum
     "nicovideo.jp"
   ]
 
-  def download_resource
-    super.download_resource
-#    aurl = Addressable::URI.parse(self.src)
-#    doc = RequestParser.request_and_parse_html(url: aurl.to_s, header: {"User-Agent" => "Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/65.0.3325.181 Mobile Safari/537.36"}, options: {:follow_redirect => true})
-#    doc.css("#jsDataContainer")
-#    file_name = self.original_filename + ".mp4"
-#    output_file_path = Rails.root.to_s + "/tmp/video/" + file_name
-#    system("youtube-dl " + self.src + " -o " + output_file_path.to_s)
-#    file = File.open(output_file_path)
-#    blob = file.read
-#    File.delete(output_file_path)
-#    return blob
+  def download_resource(&:block)
+    aurl = Addressable::URI.parse(self.src)
+    doc = RequestParser.request_and_parse_html(url: aurl.to_s, options: {:follow_redirect => true})
+    info_json = doc.css("#js-initial-watch-data").first
+    info_json_hash = JSON.parse(info_json["data-api-data"])
+    video_url_hash = info_json_hash["video"]["smileInfo"]
+    http_client = HTTPClient.new
+    http_client.receive_timeout = 60 * 120
+    result = http_client.get_content(video_url_hash["url"], header: {Cookie: 'nicohistory=sm783183%3A1547437251%3A1547437251%3Aead50dac17d90d30%3A1'})) do |chunk|
+      block.call(chunk)
+    end
+    return video_url_hash["url"]
   end
 
   def self.niconico_video?(url)

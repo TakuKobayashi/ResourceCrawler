@@ -145,14 +145,23 @@ class Datapool::ResourceMetum < Datapool::ResourceBase
     ext = File.extname(self.filename)
     plane_filename = self.filename.gsub(ext, "")
     filepath = self.s3_backup_path + [plane_filename, SecureRandom.hex].join("_") + ext
-    resource_binary = self.download_resource
-    checksum = Digest::MD5.hexdigest(resource_binary)
     s3 = Aws::S3::Client.new
-    result = s3.put_object(bucket: "taptappun", body: resource_binary, key: filepath)
-    self.update!(backup_url: S3_ROOT_URL + filepath, md5sum: checksum)
+    Tempfile.create(SecureRandom.hex(32)) do |tempfile|
+      self.download_resource do |chunk|
+        tempfile.write(chunk)
+      end
+      checksum = Digest::MD5.hexdigest(tempfile)
+      result = s3.put_object(bucket: "taptappun", body: tempfile, key: filepath)
+      update!(backup_url: S3_ROOT_URL + filepath, md5sum: checksum)
+    end
   end
 
-  def download_resource
-    return RequestParser.request_and_response_body(url: self.src.to_s, options: {:follow_redirect => true})
+  def download_resource(&:block)
+    http_client = HTTPClient.new
+    http_client.receive_timeout = 60 * 120
+    result = http_client.get_content(self.src) do |chunk|
+      block.call(chunk)
+    end
+    return result
   end
 end
