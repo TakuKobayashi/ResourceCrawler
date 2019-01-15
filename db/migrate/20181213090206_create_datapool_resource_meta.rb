@@ -11,9 +11,7 @@ class CreateDatapoolResourceMeta < ActiveRecord::Migration[5.2]
       t.string :basic_src, null: false
       t.text :remain_src
       t.string :thumbnail_url
-      t.integer :file_size, null: false, default: 0
-      t.string :md5sum, null: false, default: ""
-      t.string :backup_url
+      t.string :trueth_content_url
       t.text :options
     end
 
