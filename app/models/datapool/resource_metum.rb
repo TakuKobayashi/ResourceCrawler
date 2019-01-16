@@ -13,16 +13,13 @@
 #  basic_src             :string(255)      not null
 #  remain_src            :text(65535)
 #  thumbnail_url         :string(255)
-#  file_size             :integer          default(0), not null
-#  md5sum                :string(255)      default(""), not null
-#  backup_url            :string(255)
+#  asset_file_url        :string(255)
 #  options               :text(65535)
 #
 # Indexes
 #
 #  index_datapool_resource_meta_on_basic_src_and_type  (basic_src,type)
 #  index_datapool_resource_meta_on_content_id          (content_id)
-#  index_datapool_resource_meta_on_md5sum              (md5sum)
 #  index_datapool_resource_meta_on_uuid                (uuid) UNIQUE
 #
 

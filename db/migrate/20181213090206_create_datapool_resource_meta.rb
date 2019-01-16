@@ -11,12 +11,11 @@ class CreateDatapoolResourceMeta < ActiveRecord::Migration[5.2]
       t.string :basic_src, null: false
       t.text :remain_src
       t.string :thumbnail_url
-      t.string :trueth_content_url
+      t.string :asset_file_url
       t.text :options
     end
 
     add_index :datapool_resource_meta, :uuid, unique: true
-    add_index :datapool_resource_meta, :md5sum
     add_index :datapool_resource_meta, [:basic_src, :type]
     add_index :datapool_resource_meta, :content_id
   end

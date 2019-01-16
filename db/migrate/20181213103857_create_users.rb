@@ -5,6 +5,8 @@ class CreateUsers < ActiveRecord::Migration[5.2]
       t.string :password, null: false
       t.string :uid, null: false
       t.integer :state, null: false, default: 0
+      t.integer :point, null: false, default: 0
+      t.datetime :subscription_end_at
       t.datetime :last_logined_at, null: false
       t.timestamps
     end
