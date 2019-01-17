@@ -3,7 +3,7 @@
 # Table name: accesses
 #
 #  id               :bigint(8)        not null, primary key
-#  user_id          :integer
+#  user_id          :bigint(8)
 #  uid              :string(255)      not null
 #  ip_address       :string(255)      not null
 #  user_agent       :text(65535)

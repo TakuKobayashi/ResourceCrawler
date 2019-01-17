@@ -1,7 +1,7 @@
 class CreateAccesses < ActiveRecord::Migration[5.2]
   def change
     create_table :accesses do |t|
-      t.integer :user_id
+      t.integer :user_id, limit: 8
       t.string :uid, null: false
       t.string :ip_address, null: false
       t.text :user_agent

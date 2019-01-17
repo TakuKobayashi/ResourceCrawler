@@ -3,7 +3,7 @@
 # Table name: accounts
 #
 #  id           :bigint(8)        not null, primary key
-#  user_id      :integer          not null
+#  user_id      :bigint(8)        not null
 #  type         :string(255)
 #  uid          :string(255)      not null
 #  token        :text(65535)

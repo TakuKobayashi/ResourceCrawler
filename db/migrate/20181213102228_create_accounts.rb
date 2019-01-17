@@ -1,7 +1,7 @@
 class CreateAccounts < ActiveRecord::Migration[5.2]
   def change
     create_table :accounts do |t|
-      t.integer :user_id, null: false
+      t.integer :user_id, limit: 8 ,null: false
       t.string :type
       t.string :uid, null: false
       t.text :token
