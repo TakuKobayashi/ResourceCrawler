@@ -1,0 +1,31 @@
+# == Schema Information
+#
+# Table name: log_invitations
+#
+#  id              :bigint(8)        not null, primary key
+#  user_id         :bigint(8)        not null
+#  invited_user_id :bigint(8)        not null
+#  level           :integer          not null
+#  registered_at   :datetime
+#  access_from     :string(255)
+#  options         :text(65535)
+#  created_at      :datetime         not null
+#  updated_at      :datetime         not null
+#
+# Indexes
+#
+#  index_log_invitations_on_invited_user_id  (invited_user_id)
+#  index_log_invitations_on_user_id          (user_id)
+#
+
+# Read about fixtures at http://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+# This model initially had no columns defined. If you add columns to the
+# model remove the '{}' from the fixture names and add the columns immediately
+# below each fixture, per the syntax in the comments below
+#
+one: {}
+# column: value
+#
+two: {}
+# column: value
