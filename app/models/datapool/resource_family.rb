@@ -12,10 +12,7 @@
 #  datapool_resource_families_parent_uuid  (parent_resource_uuid)
 #
 
-require 'test_helper'
-
-class DatapoolResourceFamilyTest < ActiveSupport::TestCase
-  # test "the truth" do
-  #   assert true
-  # end
+class Datapool::ResourceFamily < ApplicationRecord
+  belongs_to :parent, class_name: 'Datapool::ResourceMetum', primary_key: :uuid, foreign_key: :parent_resource_uuid, required: false
+  belongs_to :child, class_name: 'Datapool::ResourceMetum', primary_key: :uuid, foreign_key: :child_resource_uuid, required: false
 end

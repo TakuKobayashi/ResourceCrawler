@@ -6,7 +6,7 @@
 #  user_id               :integer          not null
 #  crawling_model_name   :string(255)      not null
 #  uuid                  :string(255)      not null
-#  state                 :integer          default(0), not null
+#  state                 :integer          default("standby"), not null
 #  priority              :bigint(8)        default(0), not null
 #  current_crawled_count :integer          default(0), not null
 #  cost                  :integer          default(0), not null
@@ -23,4 +23,15 @@
 #
 
 class CrawlJob < ApplicationRecord
+  enum state: {
+    standby: 0,
+    pending: 1,
+    crawling: 2,
+    downloading: 3,
+    complete: 4,
+    errored: 9,
+  }
+
+  belongs_to :user, class_name: 'User', foreign_key: :user_id, required: false
+  has_many :job_resources, class_name: 'JobResource', foreign_key: :crawl_job_id
 end

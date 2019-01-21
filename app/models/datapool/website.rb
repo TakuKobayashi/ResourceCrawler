@@ -19,7 +19,9 @@
 
 class Datapool::Website < Datapool::ResourceBase
   serialize :options, JSON
-  has_many :resources, class_name: 'Datapool::ResourceMetum', primary_key: uuid, foreign_key: :datapool_website_uuid
+  has_many :resources, class_name: 'Datapool::ResourceMetum', primary_key: :uuid, foreign_key: :datapool_website_uuid
+  has_many :children, class_name: 'Datapool::WebsiteRelation', foreign_key: :parent_website_id
+  has_many :website_keywords, class_name: 'Datapool::WebsiteKeyword', primary_key: :uuid, foreign_key: :datapool_website_uuid
 
   enum crawl_state: {
     single_standby: 0,

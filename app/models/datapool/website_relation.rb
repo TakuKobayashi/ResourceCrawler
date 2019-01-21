@@ -15,4 +15,6 @@
 #
 
 class Datapool::WebsiteRelation < ApplicationRecord
+  belongs_to :parent, class_name: 'Datapool::Website', foreign_key: :parent_website_id, required: false
+  belongs_to :child, class_name: 'Datapool::Website', foreign_key: :child_website_id, required: false
 end

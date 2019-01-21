@@ -37,6 +37,11 @@ class Datapool::ResourceMetum < Datapool::ResourceBase
     text: 7
   }
 
+  has_one :resource_extend, class_name: 'Datapool::ResourceExtend', foreign_key: :datapool_resource_meta_id
+  has_many :resource_keywords, class_name: 'Datapool::ResourceKeyword', primary_key: :uuid, foreign_key: :datapool_resource_metum_uuid
+  has_many :job_resources, class_name: 'JobResource', primary_key: :uuid, foreign_key: :resource_meta_uuid
+  has_many :childrens, class_name: 'Datapool::ResourceFamily', primary_key: :uuid, foreign_key: :parent_resource_uuid
+
   S3_ROOT_URL = "https://taptappun.s3.amazonaws.com/"
 
   def self.resource_file_extensions

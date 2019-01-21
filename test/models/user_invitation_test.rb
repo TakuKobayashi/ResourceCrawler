@@ -4,7 +4,7 @@
 #
 #  id               :bigint(8)        not null, primary key
 #  user_id          :bigint(8)        not null
-#  state            :integer          default(0), not null
+#  state            :integer          default("activate"), not null
 #  token            :string(255)      not null
 #  invite_url       :string(255)      not null
 #  qrcode_image_url :string(255)

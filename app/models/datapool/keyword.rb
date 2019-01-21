@@ -17,4 +17,6 @@
 #
 
 class Datapool::Keyword < ApplicationRecord
+  has_many :website_keywords, class_name: 'Datapool::WebsiteKeyword', primary_key: :uuid, foreign_key: :datapool_keyword_uuid
+  has_many :resource_keywords, class_name: 'Datapool::ResourceKeyword', primary_key: :uuid, foreign_key: :datapool_keyword_uuid
 end

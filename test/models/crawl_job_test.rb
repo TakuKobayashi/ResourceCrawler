@@ -6,7 +6,7 @@
 #  user_id               :integer          not null
 #  crawling_model_name   :string(255)      not null
 #  uuid                  :string(255)      not null
-#  state                 :integer          default(0), not null
+#  state                 :integer          default("standby"), not null
 #  priority              :bigint(8)        default(0), not null
 #  current_crawled_count :integer          default(0), not null
 #  cost                  :integer          default(0), not null

@@ -21,4 +21,8 @@
 #
 
 class User < ApplicationRecord
+  has_many :invitations, class_name: 'UserInvitation', foreign_key: :user_id
+  has_many :crawl_jobs, class_name: 'CrawlJob', foreign_key: :user_id
+  has_many :accesses, class_name: 'Access', foreign_key: :user_id
+  has_many :accounts, class_name: 'Account', foreign_key: :user_id
 end

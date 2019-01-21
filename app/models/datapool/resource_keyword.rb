@@ -13,4 +13,6 @@
 #
 
 class Datapool::ResourceKeyword < ApplicationRecord
+  belongs_to :keyword, class_name: 'Datapool::Keyword', foreign_key: :datapool_keyword_uuid, primary_key: :uuid, required: false
+  belongs_to :resource, class_name: 'Datapool::ResourceMetum', foreign_key: :datapool_resource_metum_uuid, primary_key: :uuid, required: false
 end

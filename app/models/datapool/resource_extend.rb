@@ -15,4 +15,5 @@
 #
 
 class Datapool::ResourceExtend < ApplicationRecord
+  belongs_to :resource, class_name: 'Datapool::ResourceMetum', foreign_key: :datapool_resource_meta_id, required: false
 end

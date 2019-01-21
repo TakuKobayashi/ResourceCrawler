@@ -12,5 +12,10 @@
 #  datapool_resource_families_parent_uuid  (parent_resource_uuid)
 #
 
-class DatapoolResourceFamily < ApplicationRecord
+require 'test_helper'
+
+class Datapool::ResourceFamilyTest < ActiveSupport::TestCase
+  # test "the truth" do
+  #   assert true
+  # end
 end

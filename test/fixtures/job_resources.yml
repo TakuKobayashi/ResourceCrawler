@@ -5,7 +5,7 @@
 #  id                 :bigint(8)        not null, primary key
 #  crawl_job_id       :bigint(8)        default(0), not null
 #  resource_meta_uuid :string(255)      not null
-#  state              :integer          default(0), not null
+#  state              :integer          default("standby"), not null
 #  priority           :bigint(8)        default(0), not null
 #  lock_version       :integer          default(0), not null
 #
