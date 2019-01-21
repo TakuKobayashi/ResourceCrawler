@@ -25,4 +25,8 @@ class User < ApplicationRecord
   has_many :crawl_jobs, class_name: 'CrawlJob', foreign_key: :user_id
   has_many :accesses, class_name: 'Access', foreign_key: :user_id
   has_many :accounts, class_name: 'Account', foreign_key: :user_id
+
+  has_many :log_payments, class_name: 'Log::Payment', foreign_key: :user_id
+  has_many :log_invites, class_name: 'Log::Invitation', foreign_key: :user_id
+  has_one :log_invited, class_name: 'Log::Invitation', foreign_key: :user_invitation_id
 end

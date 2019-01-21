@@ -25,4 +25,5 @@ class UserInvitation < ApplicationRecord
   }
 
   belongs_to :user, class_name: 'User', foreign_key: :user_id, required: false
+  has_many :log_invitations, class_name: 'Log::Invitation', foreign_key: :user_invitation_id
 end
