@@ -39,11 +39,11 @@ class Datapool::NiconicoMetum < Datapool::ResourceMetum
           title: data_hash["title"],
           options: {
             keywords: keyword.to_s,
-            content_id: data_hash["contentId"],
             tags: data_hash["tags"].to_s.split(" "),
             category_tags: data_hash["categoryTags"].to_s.split(" ")
           }
         )
+        image.content_id = data_hash["contentId"]
         images << image
       end
       break if images.blank?
@@ -80,9 +80,7 @@ class Datapool::NiconicoMetum < Datapool::ResourceMetum
       update!(
         content_id: info_json_hash["video"]["id"],
         thumbnail_url: info_json_hash["video"]["thumbnailURL"],
-        options: {
-          true_content_url: video_url_hash["url"]
-        }
+        asset_file_url: video_url_hash["url"]
       )
     end
   end

@@ -34,7 +34,6 @@ class Datapool::WebsiteResourceMetum < Datapool::ResourceMetum
       uploaded_path = ResourceUtility.upload_s3(image_binary, self.s3_root_path + new_filename)
       aurl = Addressable::URI.parse(Datapool::ResourceMetum::S3_ROOT_URL + uploaded_path)
     end
-
     basic_src, remain_src = WebNormalizer.url_partition(url: aurl.to_s)
     self.basic_src = basic_src
     self.remain_src = remain_src

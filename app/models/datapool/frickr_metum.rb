@@ -59,11 +59,11 @@ class Datapool::FrickrMetum < Datapool::ResourceMetum
         url: resource_url.to_s,
         title: flickr_resource.title,
         options: {
-          flicker_id: flickr_resources.id,
           flicker_secret: flickr_resources.secret,
           flicker_user_id: flickr_resources.owner
         }.merge(options)
       )
+      resource.content_id = flickr_resources.id
       url_resources[resource_url.to_s] = resource
     end
     resources = url_resources.values

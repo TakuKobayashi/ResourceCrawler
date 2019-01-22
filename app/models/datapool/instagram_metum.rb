@@ -98,11 +98,11 @@ class Datapool::InstagramMetum < Datapool::ResourceMetum
         url: node["display_url"] || node["thumbnail_src"],
         title: title_body,
         options: {
-          content_id: node["id"],
           post_user_id: node["owner"]["id"],
           post_at: Time.at(node["taken_at_timestamp"].to_i)
         }
       )
+      resource.content_id = node["id"]
       if node["is_video"]
         resource.resource_genre = :video
       end
