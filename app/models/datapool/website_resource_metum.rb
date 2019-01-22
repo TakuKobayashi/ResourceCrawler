@@ -26,10 +26,17 @@
 
 class Datapool::WebsiteResourceMetum < Datapool::ResourceMetum
   def src=(url)
-    basic_src, remain_src = WebNormalizer.url_partition(url: url)
+    aurl = Addressable::URI.parse(url.to_s)
+    if self.image? && aurl.scheme == "data"
+      image_binary =  Base64.decode64(aurl.to_s.gsub(/data:image\/.+;base64\,/, ""))
+      image_type = aurl.to_s.gsub(/data:image\//, "").gsub(/;base64\,.+/, "")
+      new_filename = SecureRandom.hex + ".#{image_type.to_s.downcase}"
+      uploaded_path = ResourceUtility.upload_s3(image_binary, self.s3_root_path + new_filename)
+      aurl = Addressable::URI.parse(Datapool::ResourceMetum::S3_ROOT_URL + uploaded_path)
+    end
+
+    basic_src, remain_src = WebNormalizer.url_partition(url: aurl.to_s)
     self.basic_src = basic_src
     self.remain_src = remain_src
   end
 end
-
-

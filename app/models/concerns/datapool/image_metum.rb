@@ -69,34 +69,19 @@ module Datapool::ImageMetum
     return "data:image/" + ext[1..ext.size] + ";base64," + base64_image
   end
 
-  def self.new_image(image_url:, title:, check_image_file: false, options: {})
-    aimage_url = Addressable::URI.parse(image_url.to_s)
-    image_type = nil
-    if check_image_file
-      # 画像じゃないものも含まれていることもあるので分別する
-      begin
-        image_type = FastImage.type(aimage_url.to_s)
-      rescue URI::InvalidComponentError => e
-        Rails.logger.warn("#{image_url} url error!!:" + e.message)
-        return nil
-      end
-      if image_type.blank?
-        Rails.logger.warn("it is not image:" + aimage_url.to_s)
-        return nil
-      end
+  def self.invlide_file?(url:)
+    # 画像じゃないものも含まれていることもあるので分別する
+    begin
+      image_type = FastImage.type(url.to_s)
+    rescue URI::InvalidComponentError => e
+      Rails.logger.warn("#{url} url error!!:" + e.message)
+      return true
     end
-    image = self.new(title: title.to_s.truncate(255), options: options)
-    if aimage_url.scheme == "data"
-      image_binary =  Base64.decode64(aimage_url.to_s.gsub(/data:image\/.+;base64\,/, ""))
-      new_filename = SecureRandom.hex + ".#{image_type.to_s.downcase}"
-      uploaded_path = ResourceUtility.upload_s3(image_binary, image.s3_path + new_filename)
-      image.src = Datapool::ResourceMetum::S3_ROOT_URL + uploaded_path
-    else
-      image.src = aimage_url.to_s
+    if image_type.blank?
+      Rails.logger.warn("it is not image:" + aimage_url.to_s)
+      return true
     end
-    filename = self.match_filename(image.src.to_s)
-    image.set_original_filename(filename)
-    return image
+    return false
   end
 
   def self.calc_resize_text(width:, height:, max_length:)

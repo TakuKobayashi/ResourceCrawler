@@ -92,25 +92,27 @@ class Datapool::GoogleSearchMetum < Datapool::ResourceMetum
       next if link_metum["imgurl"].blank? && link_metum["imgrefurl"].blank?
       image_url = self.laundering_url_path(url: link_metum["imgurl"].to_s)
       split_keywords = keyword.to_s.split(" ")
-      image = self.constract(
-        url: image_url.to_s,
-        title: keyword.to_s,
-        check_file: true,
-        options: {
-          keywords: keyword.to_s,
-          number: number + counter + 1
-        }.merge(options)
-      )
-      if image.blank?
+      image = nil
+      if !Datapool::ImageMetum.invlide_file?(url: image_url.to_s)
         image = self.constract(
-          url: searched_thumbnail_urls[index].to_s,
+          url: image_url.to_s,
           title: keyword.to_s,
-          check_file: true,
           options: {
-            keyword: keyword.to_s,
             number: number + counter + 1
           }.merge(options)
         )
+      end
+      if image.blank?
+        searched_thumbnail_url = searched_thumbnail_urls[index].to_s
+        if !Datapool::ImageMetum.invlide_file?(url: searched_thumbnail_url)
+          image = self.constract(
+            url: searched_thumbnail_url,
+            title: keyword.to_s,
+            options: {
+              number: number + counter + 1
+            }.merge(options)
+          )
+        end
       end
       if image.present?
         web_attribute = web_attributes[index] || {}
@@ -118,7 +120,6 @@ class Datapool::GoogleSearchMetum < Datapool::ResourceMetum
           url: link_metum["imgrefurl"].to_s,
           title: web_attribute["pt"].to_s,
           options: {
-            keyword: keyword.to_s,
             number: number + counter + 1
           }
         )
