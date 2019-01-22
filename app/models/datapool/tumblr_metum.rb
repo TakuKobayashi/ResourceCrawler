@@ -7,6 +7,7 @@
 #  content_id            :string(255)
 #  datapool_website_uuid :string(255)
 #  uuid                  :string(255)      not null
+#  appear_state          :integer          default("appearing"), not null
 #  resource_genre        :integer          default("unknown"), not null
 #  title                 :string(255)      not null
 #  original_filename     :text(65535)

@@ -7,6 +7,7 @@
 #  content_id            :string(255)
 #  datapool_website_uuid :string(255)
 #  uuid                  :string(255)      not null
+#  appear_state          :integer          default("appearing"), not null
 #  resource_genre        :integer          default("unknown"), not null
 #  title                 :string(255)      not null
 #  original_filename     :text(65535)
@@ -25,6 +26,14 @@
 
 class Datapool::ResourceMetum < Datapool::ResourceBase
   serialize :options, JSON
+
+  enum appear_state: {
+    appearing: 0,
+    mismatch: 1,
+    notfound: 2,
+    disappeared: 3,
+    error: 9,
+  }
 
   enum resource_genre: {
     unknown: 0,
@@ -49,7 +58,8 @@ class Datapool::ResourceMetum < Datapool::ResourceBase
       Datapool::AudioMetum::AUDIO_FILE_EXTENSIONS |
       Datapool::ImageMetum::IMAGE_FILE_EXTENSIONS |
       Datapool::VideoMetum::VIDEO_FILE_EXTENSIONS |
-      Datapool::ThreedModelMetum::THREED_MODEL_FILE_EXTENSIONS)
+      Datapool::ThreedModelMetum::THREED_MODEL_FILE_EXTENSIONS |
+      Datapool::CompressedMetum::COMPRESSED_FILE_EXTENSIONS)
   end
 
   def self.suggest_genre(url)
@@ -70,20 +80,21 @@ class Datapool::ResourceMetum < Datapool::ResourceBase
     end
   end
 
-  def self.constract(url:, title:, check_file: false, options: {})
-    url.strip!
+  def self.constract(url:, title:, options: {})
+    correct_url = url.strip
     sanitized_title = Sanitizer.basic_sanitize(title)
     new_resource_class = self.new
     new_resource_class.uuid = SecureRandom.hex(32)
-    if Datapool::YoutubeResourceMetum.youtube?(url)
+    if Datapool::YoutubeResourceMetum.youtube?(correct_url)
       new_resource_class = Datapool::YoutubeResourceMetum.new
-    elsif Datapool::NiconicoMetum.niconico_video?(url)
+    elsif Datapool::NiconicoMetum.niconico_video?(correct_url)
       new_resource_class = Datapool::NiconicoMetum.new
     end
     new_resource_class.title = sanitized_title
-    new_resource_class.resource_genre = new_resource_class.class.suggest_genre(url)
-    new_resource_class.filename = url
-    new_resource_class.src = url
+    new_resource_class.appear_state = :appearing
+    new_resource_class.resource_genre = new_resource_class.class.suggest_genre(correct_url)
+    new_resource_class.filename = correct_url
+    new_resource_class.src = correct_url
     new_resource_class.options = options
     return new_resource_class
   end

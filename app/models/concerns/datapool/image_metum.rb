@@ -37,18 +37,6 @@ module Datapool::ImageMetum
   CRAWL_IMAGE_ROOT_PATH = "project/crawler/images/"
   CRAWL_IMAGE_BACKUP_PATH = "backup/crawler/images/"
 
-  def s3_path
-    return CRAWL_IMAGE_ROOT_PATH
-  end
-
-  def backup_s3_path
-    return CRAWL_IMAGE_BACKUP_PATH
-  end
-
-  def directory_name
-    return "images"
-  end
-
   def self.imagefile?(url)
     aurl = Addressable::URI.parse(url.to_s)
     return IMAGE_FILE_EXTENSIONS.any?{|ext| File.extname(aurl.path).downcase.start_with?(ext) } || aurl.scheme == "data"

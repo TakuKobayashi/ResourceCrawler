@@ -55,10 +55,11 @@ class Datapool::Website < Datapool::ResourceBase
   end
 
   def self.constract(url:, title:, options: {})
+    sanitized_title = Sanitizer.basic_sanitize(title)
     website = Datapool::Website.new
     website.uuid = SecureRandom.hex(31)
-    website.src = url.to_s
-    website.title = title
+    website.src = url.strip.to_s
+    website.title = sanitized_title
     website.options = options
     return website
   end

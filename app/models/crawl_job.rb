@@ -23,6 +23,8 @@
 #
 
 class CrawlJob < ApplicationRecord
+  serialize :options, JSON
+
   enum state: {
     standby: 0,
     pending: 1,

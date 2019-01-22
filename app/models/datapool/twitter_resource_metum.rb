@@ -7,6 +7,7 @@
 #  content_id            :string(255)
 #  datapool_website_uuid :string(255)
 #  uuid                  :string(255)      not null
+#  appear_state          :integer          default("appearing"), not null
 #  resource_genre        :integer          default("unknown"), not null
 #  title                 :string(255)      not null
 #  original_filename     :text(65535)
@@ -119,10 +120,9 @@ class Datapool::TwitterResourceMetum < Datapool::ResourceMetum
         image_resource = self.constract(
           url: m.media_url.to_s,
           title: tweet_text,
-          options: {
-            tweet_id: tweet.id
-          }.merge(options)
+          options: options
         )
+        image_resource.content_id = tweet.id
         image_resource.resource_genre = :image
         [image_resource]
       when Twitter::Media::Video
@@ -131,19 +131,18 @@ class Datapool::TwitterResourceMetum < Datapool::ResourceMetum
         image_resource = self.constract(
           url: m.media_url.to_s,
           title: tweet_text,
-          options: {
-            tweet_id: tweet.id
-          }.merge(options)
+          options: options
         )
+        image_resource.content_id = tweet.id
         image_resource.resource_genre = :image
         video_resource = self.constract(
           url: max_bitrate_variant.try(:url).to_s,
           title: tweet_text,
           options: {
-            tweet_id: tweet.id,
             duration: m.video_info.duration_millis
           }.merge(options)
         )
+        video_resource.content_id = tweet.id
         video_resource.resource_genre = :video
         [image_resource, video_resource]
       else

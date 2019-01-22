@@ -5,6 +5,7 @@ class CreateDatapoolResourceMeta < ActiveRecord::Migration[5.2]
       t.string :content_id
       t.string :datapool_website_uuid
       t.string :uuid, null: false
+      t.integer :appear_state, null: false, default: 0
       t.integer :resource_genre, null: false, default: 0
       t.string :title, null: false
       t.text :original_filename
