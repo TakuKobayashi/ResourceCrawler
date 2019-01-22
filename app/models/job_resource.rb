@@ -3,7 +3,7 @@
 # Table name: job_resources
 #
 #  id                 :bigint(8)        not null, primary key
-#  crawl_job_id       :bigint(8)        default(0), not null
+#  crawl_job_id       :bigint(8)
 #  resource_meta_uuid :string(255)      not null
 #  state              :integer          default("standby"), not null
 #  priority           :bigint(8)        default(0), not null

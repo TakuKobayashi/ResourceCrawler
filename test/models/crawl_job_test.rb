@@ -4,6 +4,7 @@
 #
 #  id                    :bigint(8)        not null, primary key
 #  user_id               :integer          not null
+#  keyword               :string(255)      not null
 #  crawling_model_name   :string(255)      not null
 #  uuid                  :string(255)      not null
 #  state                 :integer          default("standby"), not null
