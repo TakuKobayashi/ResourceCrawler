@@ -75,6 +75,11 @@ gem 'pdf-reader'
 gem 'dotenv-rails', require: 'dotenv/rails-now'
 gem 'aws-sdk', '~> 2'
 
+gem 'rufo'
+
+gem 'selenium-webdriver'
+gem 'chromedriver-helper'
+
 group :development, :test do
   # Call 'byebug' anywhere in the code to stop execution and get a debugger console
   gem 'byebug', platforms: [:mri, :mingw, :x64_mingw]
@@ -92,9 +97,6 @@ end
 group :test do
   # Adds support for Capybara system testing and selenium driver
   gem 'capybara', '>= 2.15'
-  gem 'selenium-webdriver'
-  # Easy installation and use of chromedriver to run system tests with Chrome
-  gem 'chromedriver-helper'
 end
 
 # Windows does not include zoneinfo files, so bundle the tzinfo-data gem
