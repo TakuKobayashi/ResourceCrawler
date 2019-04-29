@@ -8,9 +8,9 @@
   "author": "TakuKobayashi",
   "private": true,
   "dependencies": {
-    "@line/bot-sdk": "*",
     "aws-sdk": "*",
-    "request": "*",
+    "axios": "*",
+    "ejs": "*",
     "querystring": "*",
     "underscore": "*",
     "underscore.string": "*",
