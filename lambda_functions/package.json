@@ -3,7 +3,8 @@
   "version": "0.0.1",
   "main": "server.js",
   "scripts": {
-    "start": "nodemon server.js"
+    "server": "nodemon server.js",
+    "build": "node build.js"
   },
   "author": "TakuKobayashi",
   "private": true,
