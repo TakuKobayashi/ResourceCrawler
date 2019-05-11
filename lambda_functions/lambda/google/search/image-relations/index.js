@@ -9,18 +9,37 @@ const GOOGLE_RELATION_SEARCH_ROOT_URL = "https://www.google.com/async/imgrc";
 const USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.103 Safari/537.36";
 
 exports.handler = async (event, context) => {
+  const startTime = new Date();
   console.log(event);
   if(!event.id || !event.relation_id){
-    return [];
+    return {
+      message: "failed",
+      executed_millisecond: (new Date() - startTime),
+      params: event,
+      results: [],
+      timestamp: new Date().getTime(),
+    };
   }
   const relationPath = await getRelationSearchUrl({docid: event.relation_id, imgdii: event.id, async: "_fmt:prog"});
   if(!relationPath){
-    return [];
+    return {
+      message: "failed",
+      executed_millisecond: (new Date() - startTime),
+      params: event,
+      results: [],
+      timestamp: new Date().getTime(),
+    };
   }
   const relationUrl = url.parse(relationPath, true);
-  const allSearchResults = googleImageSearch.searchAllGoogleImages(relationUrl.query);
+  const allSearchResults = await googleImageSearch.searchAllGoogleImages(relationUrl.query);
 
-  return allSearchResults;
+  return {
+    message: "success",
+    executed_millisecond: (new Date() - startTime),
+    params: event,
+    results: allSearchResults,
+    timestamp: new Date().getTime(),
+  };
 };
 
 async function getRelationSearchUrl(searchParams){
