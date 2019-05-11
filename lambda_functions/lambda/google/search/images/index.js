@@ -3,7 +3,8 @@ const axios = require("axios");
 
 const GOOGLE_SEARCH_ROOT_URL = "https://www.google.co.jp/search";
 const USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.103 Safari/537.36";
-const limitSearchMillisecond = 240000;
+const LIMIT_SEARCH_MILLISECOND = 240000;
+const MAX_REQUEST_SLEEP_MILLISECOND = 1000;
 
 exports.handler = async (event, context) => {
   console.log(event);
@@ -13,7 +14,8 @@ exports.handler = async (event, context) => {
   }
   const startTime = new Date();
   let counter = 0;
-  while((new Date() - startTime) < limitSearchMillisecond){
+  while((new Date() - startTime) < LIMIT_SEARCH_MILLISECOND){
+    const requestStartTime = new Date();
     const searchResults = await searchGoogleToObjects({
       q: event.q,
       tbm: "isch",
@@ -25,6 +27,10 @@ exports.handler = async (event, context) => {
     }
     counter = counter + searchResults.length;
     allSearchResults = allSearchResults.concat(searchResults);
+    const elapsedMilliSecond = new Date() - requestStartTime;
+    if(elapsedMilliSecond < MAX_REQUEST_SLEEP_MILLISECOND){
+      await sleep(elapsedMilliSecond);
+    }
   }
 
   return allSearchResults;
@@ -68,4 +74,12 @@ function parseJSON(text){
     //console.log(error);
   }
   return json;
+}
+
+async function sleep(waitMilliseconds){
+  return new Promise(resolve => {
+    setTimeout(() => {
+      resolve();
+    }, waitMilliseconds)
+  });
 }
