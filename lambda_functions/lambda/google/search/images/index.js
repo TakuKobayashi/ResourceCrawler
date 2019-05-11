@@ -2,11 +2,24 @@ const requireRoot = require('app-root-path').require;
 const googleImageSearch = requireRoot("/libs/googleImageSearch")
 
 exports.handler = async (event, context) => {
+  const startTime = new Date();
   console.log(event);
   if(!event.q){
-    return [];
+    return {
+      message: "failed",
+      executed_millisecond: (new Date() - startTime),
+      params: event,
+      results: [],
+      timestamp: new Date(),
+    };
   }
   const allSearchResults = googleImageSearch.searchAllGoogleImages({q: event.q});
 
-  return allSearchResults;
+  return {
+    message: "success",
+    executed_millisecond: (new Date() - startTime),
+    params: event,
+    results: allSearchResults,
+    timestamp: new Date(),
+  }
 };
