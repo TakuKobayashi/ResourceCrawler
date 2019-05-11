@@ -3,10 +3,31 @@ const axios = require("axios");
 
 const GOOGLE_SEARCH_ROOT_URL = "https://www.google.co.jp/search";
 const USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.103 Safari/537.36";
+const limitSearchMillisecond = 240000;
 
 exports.handler = async (event, context) => {
   console.log(event);
-  return event;
+  let allSearchResults = [];
+  if(!event.q){
+    return allSearchResults;
+  }
+  const startTime = new Date();
+  let counter = 0;
+  while((new Date() - startTime) < limitSearchMillisecond){
+    const searchResults = await searchGoogleToObjects({
+      q: event.q,
+      tbm: "isch",
+      start: counter,
+      ijn: Math.floor(counter / 100)
+    });
+    if(searchResults.length <= 0){
+      break;
+    }
+    counter = counter + searchResults.length;
+    allSearchResults = allSearchResults.concat(searchResults);
+  }
+
+  return allSearchResults;
 };
 
 async function searchGoogleToObjects(searchParams){
