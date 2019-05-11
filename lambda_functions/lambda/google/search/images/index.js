@@ -10,16 +10,16 @@ exports.handler = async (event, context) => {
       executed_millisecond: (new Date() - startTime),
       params: event,
       results: [],
-      timestamp: new Date(),
+      timestamp: new Date().getTime(),
     };
   }
-  const allSearchResults = googleImageSearch.searchAllGoogleImages({q: event.q});
+  const allSearchResults = await googleImageSearch.searchAllGoogleImages({q: event.q});
 
   return {
     message: "success",
     executed_millisecond: (new Date() - startTime),
     params: event,
     results: allSearchResults,
-    timestamp: new Date(),
+    timestamp: new Date().getTime(),
   }
 };
