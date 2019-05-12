@@ -1,25 +1,14 @@
 const requireRoot = require('app-root-path').require;
-const googleImageSearch = requireRoot("/libs/googleImageSearch")
+const googleImageSearch = requireRoot("/libs/googleImageSearch");
+const apiRenderTemplate = requireRoot("/libs/apiRenderTemplate");
 
 exports.handler = async (event, context) => {
   const startTime = new Date();
   console.log(event);
   if(!event.q){
-    return {
-      message: "failed",
-      executed_millisecond: (new Date() - startTime),
-      params: event,
-      results: [],
-      timestamp: new Date().getTime(),
-    };
+    return apiRenderTemplate("failed", startTime, {images: []});
   }
-  const allSearchResults = await googleImageSearch.searchAllGoogleImages({q: event.q});
+  const allSearchResults = await googleImageSearch.searchAllGoogleImages(event);
 
-  return {
-    message: "success",
-    executed_millisecond: (new Date() - startTime),
-    params: event,
-    results: allSearchResults,
-    timestamp: new Date().getTime(),
-  }
+  return apiRenderTemplate("success", startTime, {images: allSearchResults});
 };
