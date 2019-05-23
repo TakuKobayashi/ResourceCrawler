@@ -61,4 +61,24 @@ module.exports = class DynamoDB {
     };
     return this.dynamo.put(params).promise();
   };
+
+  async delete(tablename, filterObject) {
+    const params = {
+      TableName: tablename,
+      Key: filterObject,
+    };
+    return this.dynamo.delete(params).promise();
+  };
+
+  async delete(tablename, filterObject) {
+    const params = {
+      TableName: tablename,
+      Key: filterObject,
+    };
+    return this.dynamo.delete(params).promise();
+  };
+
+  async all(tablename){
+    return this.dynamo.scan({TableName: tablename}).promise();
+  }
 }
