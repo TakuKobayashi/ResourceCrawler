@@ -81,4 +81,15 @@ module.exports = class DynamoDB {
   async all(tablename){
     return this.dynamo.scan({TableName: tablename}).promise();
   }
+
+  async where(tablename, filterObjects) {
+    const requestItems = {}
+    requestItems[tablename] = {
+      Keys: filterObjects,
+    };
+    const params = {
+      RequestItems: requestItems,
+    }
+    return this.dynamo.batchGet(params).promise();
+  }
 }
