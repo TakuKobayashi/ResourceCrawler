@@ -1,20 +1,38 @@
 const AWS = require('aws-sdk');
-const dynamo = new AWS.DynamoDB.DocumentClient();
 
 module.exports = class DynamoDB {
   constructor(config) {
     AWS.config.update(config);
+    this.dynamo = new AWS.DynamoDB.DocumentClient();
   }
 
-  async getPromise(tablename, filterObject) {
+  async findBy(tablename, filterObject) {
     const params = {
       TableName: tablename,
       Key: filterObject
     };
-    return dynamo.get(params).promise();
+    return this.dynamo.get(params).promise();
   };
 
-  async updatePromise(tablename, filterObject, updateObject) {
+  async findByAll(tablename, filterObject) {
+    const keyNames = Object.keys(filterObject);
+    const keyConditionExpression = keyNames.map(keyName => "#" + keyName + " = " + ":" + keyName).join(" AND ");
+    const expressionAttributeNames = {}
+    const expressionAttributeValues = {}
+    for (const keyName of keyNames) {
+      expressionAttributeNames["#" + keyName] = keyName;
+      expressionAttributeValues[":" + keyName] = filterObject[keyName];
+    }
+    const params = {
+      TableName: tablename,
+      KeyConditionExpression: keyConditionExpression,
+      ExpressionAttributeNames: expressionAttributeNames,
+      ExpressionAttributeValues: expressionAttributeValues,
+    };
+    return this.dynamo.query(params).promise();
+  };
+
+  async update(tablename, filterObject, updateObject) {
     const updateExpressionString = "set ";
     const updateExpressionAttributeValues = {}
     const keys = Object.keys(updateObject);
@@ -33,14 +51,14 @@ module.exports = class DynamoDB {
       ExpressionAttributeValues: updateExpressionAttributeValues,
       ReturnValues: "UPDATED_NEW"
     };
-    return dynamo.update(params).promise();
+    return this.dynamo.update(params).promise();
   };
 
-  async createPromise(tablename, putObject) {
+  async create(tablename, putObject) {
     const params = {
       TableName: tablename,
       Item: putObject
     };
-    return dynamo.put(params).promise();
+    return this.dynamo.put(params).promise();
   };
 }
