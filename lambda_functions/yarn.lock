@@ -4329,7 +4329,7 @@ request-promise-native@^1.0.5:
     stealthy-require "^1.1.1"
     tough-cookie "^2.3.3"
 
-request@^2.87.0:
+request@^2.78.0, request@^2.87.0:
   version "2.88.0"
   resolved "https://registry.yarnpkg.com/request/-/request-2.88.0.tgz#9c2fca4f7d35b592efe57c7f0a55e81052124fef"
   integrity sha512-NAqBSrijGLZdM0WZNsInLJpkJokL72XYjUpnB0iwsRgxh7dB6COrHnTBNwN0E+lHDAJzu7kLAkDeY08z2/A0hg==
@@ -5064,6 +5064,13 @@ tweetnacl@^0.14.3, tweetnacl@~0.14.0:
   version "0.14.5"
   resolved "https://registry.yarnpkg.com/tweetnacl/-/tweetnacl-0.14.5.tgz#5ae68177f192d4456269d108afa93ff8743f4f64"
   integrity sha1-WuaBd/GS1EViadEIr6k/+HQ/T2Q=
+
+twitter-promise@^1.2.0:
+  version "1.2.0"
+  resolved "https://registry.yarnpkg.com/twitter-promise/-/twitter-promise-1.2.0.tgz#d334cb5e118c229b06a7d1caf1fb382b65e12719"
+  integrity sha1-0zTLXhGMIpsGp9HK8fs4K2XhJxk=
+  dependencies:
+    request "^2.78.0"
 
 type-check@~0.3.2:
   version "0.3.2"
