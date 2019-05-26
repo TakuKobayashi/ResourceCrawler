@@ -1,3 +1,5 @@
+const requireRoot = require('app-root-path').require;
+const util = requireRoot("/libs/util");
 const cheerio = require("cheerio");
 const axios = require("axios");
 
@@ -17,10 +19,10 @@ const searchGoogleToObjects = async function searchGoogleToObjects(searchParams)
     results.push({
       id: meta.id,
       relation_id: meta.rid,
-      site_name: meta.st,
+      website_name: meta.st,
       title: meta.pt,
       describe: meta.s,
-      url: meta.ru,
+      website_url: meta.ru,
       image_url: meta.ou,
     });
   }
@@ -48,7 +50,7 @@ exports.searchAllGoogleImages = async function searchAllGoogleImages(searchObj){
     allSearchResults = allSearchResults.concat(searchResults);
     const elapsedMilliSecond = new Date() - requestStartTime;
     if(elapsedMilliSecond < MAX_REQUEST_SLEEP_MILLISECOND){
-      await sleep(elapsedMilliSecond);
+      await util.sleep(elapsedMilliSecond);
     }
   }
 
@@ -72,12 +74,4 @@ function parseJSON(text){
     //console.log(error);
   }
   return json;
-}
-
-async function sleep(waitMilliseconds){
-  return new Promise(resolve => {
-    setTimeout(() => {
-      resolve();
-    }, waitMilliseconds)
-  });
 }
