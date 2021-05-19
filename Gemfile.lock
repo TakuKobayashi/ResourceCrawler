@@ -247,7 +247,9 @@ GEM
     mime-types (3.2.2)
       mime-types-data (~> 3.2015)
     mime-types-data (3.2019.0331)
-    mimemagic (0.3.3)
+    mimemagic (0.3.10)
+      nokogiri (~> 1)
+      rake
     mini_magick (4.9.3)
     mini_mime (1.0.1)
     mini_portile2 (2.4.0)
@@ -269,7 +271,7 @@ GEM
       ruby-rc4
       ttfunk
     public_suffix (3.0.3)
-    puma (3.12.1)
+    puma (3.12.6)
     puma_worker_killer (0.1.0)
       get_process_mem (~> 0.2)
       puma (>= 2.7, < 4)
@@ -453,7 +455,7 @@ DEPENDENCIES
   mini_magick
   mysql2
   pdf-reader
-  puma (~> 3.11)
+  puma (~> 3.12)
   puma_worker_killer
   rails (~> 5.2.2)
   rails-i18n
