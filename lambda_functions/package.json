@@ -10,7 +10,7 @@
   "private": true,
   "dependencies": {
     "app-root-path": "^2.2.1",
-    "aws-sdk": "^2.444.0",
+    "aws-sdk": "^2.814.0",
     "axios": "^0.18.0",
     "cheerio": "^1.0.0-rc.3",
     "crypto": "^1.0.1",
